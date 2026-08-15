@@ -116,7 +116,11 @@ const Users = () => {
                 <div style={{ fontWeight: 600, fontSize: 14 }}>{u.name || u.username}</div>
                 <div style={{ fontSize: 12, color: 'var(--gray-500)' }}>{u.role} · {u.shift} Shift</div>
               </div>
-              {isApprover && u._id !== currentUser?.id && (
+              {isApprover && u._id !== currentUser?.id && u.role !== 'Admin' && (
+                <button className="header-btn" onClick={() => handleDelete(u._id)} title="Delete" style={{ marginLeft: 8 }}>
+                  <i className="fas fa-trash" style={{ color: 'var(--warning)', fontSize: 12 }}></i>
+                </button>
+              )}
                 <button className="header-btn" onClick={() => handleDelete(u._id)} title="Delete" style={{ marginLeft: 8 }}>
                   <i className="fas fa-trash" style={{ color: 'var(--warning)', fontSize: 12 }}></i>
                 </button>

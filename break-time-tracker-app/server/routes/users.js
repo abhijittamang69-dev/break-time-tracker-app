@@ -61,6 +61,13 @@ router.delete('/:id', auth, isApprover, async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+    if (user.role === 'Admin') {
+      return res.status(403).json({ message: 'Administrator accounts cannot be deleted' });
+    }
+    await User.findByIdAndDelete(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
     await User.findByIdAndDelete(req.params.id);
     res.json({ message: 'User deleted successfully' });
   } catch (error) {

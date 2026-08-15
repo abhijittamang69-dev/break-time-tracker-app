@@ -128,11 +128,11 @@ const Devices = () => {
                     <td>{d.lastUsed ? new Date(d.lastUsed).toLocaleString() : '-'}</td>
                     <td>
                       {d.isActive ? (
-                        <button className="btn btn-warning" onClick={() => handleDeactivate(d._id)} disabled={actionId === d._id} style={{ width: 'auto', padding: '6px 12px', fontSize: 12 }}>
+                        <button className="btn btn-warning" onClick={() => handleDeactivate(d._id)} disabled={actionId === d._id} style={{ width: 'auto', padding: '10px 16px', fontSize: 13 }}>
                           {actionId === d._id ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-ban"></i>} Deactivate
                         </button>
                       ) : (
-                        <button className="btn btn-success" onClick={() => handleActivate(d._id)} disabled={actionId === d._id} style={{ width: 'auto', padding: '6px 12px', fontSize: 12 }}>
+                        <button className="btn btn-success" onClick={() => handleActivate(d._id)} disabled={actionId === d._id} style={{ width: 'auto', padding: '10px 16px', fontSize: 13 }}>
                           {actionId === d._id ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-check"></i>} Activate
                         </button>
                       )}

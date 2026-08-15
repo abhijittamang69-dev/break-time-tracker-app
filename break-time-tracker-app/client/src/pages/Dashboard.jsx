@@ -37,11 +37,6 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-    } catch (err) {
-      showToast('Failed to load data', 'error');
-    } finally {
-      setLoading(false);
-    }
   }, [isApprover]);
 
   useEffect(() => { fetchData(); const i = setInterval(fetchData, 10000); return () => clearInterval(i); }, [fetchData]);
@@ -187,7 +182,7 @@ const Dashboard = () => {
               <div style={{ fontWeight: 700, fontSize: 15 }}>
                 {pendingBreaks.length === 1 ? '1 Operator Waiting for Break Approval' : `${pendingBreaks.length} Operators Waiting for Break Approval`}
               </div>
-              <div style={{ fontSize: 12, opacity: 0.9, marginTop: 2 }}>
+              <div style={{ fontSize: 13, opacity: 0.9, marginTop: 2 }}>
                 Tap to review and approve requests below
               </div>
             </div>
@@ -293,10 +288,10 @@ const Dashboard = () => {
                         /> min
                       </td>
                       <td>
-                        <button className="btn btn-success" onClick={() => handleApprove(b._id)} disabled={approvingId === b._id} style={{ width: 'auto', padding: '6px 12px', fontSize: 12, marginRight: 6 }}>
+                        <button className="btn btn-success" onClick={() => handleApprove(b._id)} disabled={approvingId === b._id} style={{ width: 'auto', padding: '10px 16px', fontSize: 13, marginRight: 6 }}>
                           {approvingId === b._id ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-check"></i>} {approvingId === b._id ? '...' : 'Approve'}
                         </button>
-                        <button className="btn btn-warning" onClick={() => handleReject(b._id)} disabled={approvingId === b._id} style={{ width: 'auto', padding: '6px 12px', fontSize: 12 }}>
+                        <button className="btn btn-warning" onClick={() => handleReject(b._id)} disabled={approvingId === b._id} style={{ width: 'auto', padding: '10px 16px', fontSize: 13 }}>
                           {approvingId === b._id ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-times"></i>} {approvingId === b._id ? '...' : 'Reject'}
                         </button>
                       </td>
@@ -320,7 +315,7 @@ const Dashboard = () => {
             <div style={{ textAlign: 'center', padding: '30px 20px' }}>
               <i className="fas fa-user-check" style={{ fontSize: 32, color: 'var(--gray-300)', marginBottom: 12 }}></i>
               <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--gray-700)' }}>No one on break right now</div>
-              <div style={{ fontSize: 12, color: 'var(--gray-500)', marginTop: 4 }}>All staff are available at their workstations</div>
+              <div style={{ fontSize: 13, color: 'var(--gray-500)', marginTop: 4 }}>All staff are available at their workstations</div>
             </div>
           ) : (
             <table className="data-table">

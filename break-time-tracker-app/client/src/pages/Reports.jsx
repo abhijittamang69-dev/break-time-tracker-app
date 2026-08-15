@@ -15,6 +15,27 @@ const Reports = () => {
     finally { setLoading(false); }
   };
 
+  const downloadCSV = () => {
+    if (!report) return;
+    const headers = ['Employee', 'Role', 'Shift', 'Breaks Taken', 'Total Time (sec)', 'Status'];
+    const rows = report.staffStats.map(s => [
+      s.name,
+      s.role,
+      s.shift,
+      s.breaksTaken,
+      s.totalTime,
+      s.onBreak ? 'On Break' : s.pending ? 'Pending' : s.isLate ? 'Late' : 'OK'
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `break-report-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) return <div style={{ textAlign: 'center', padding: 60 }}><i className="fas fa-circle-notch fa-spin" style={{ fontSize: 32, color: 'var(--primary)' }}></i></div>;
   if (!report) return null;
 
@@ -31,7 +52,12 @@ const Reports = () => {
       <div className="card">
         <div className="card-header">
           <h3><i className="fas fa-users" style={{ marginRight: 8, color: 'var(--primary)' }}></i>Staff Break Summary</h3>
-          <span className="badge badge-gray">{new Date().toLocaleDateString()}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button className="btn btn-primary" onClick={downloadCSV} style={{ width: 'auto', padding: '8px 16px', fontSize: 13 }}>
+              <i className="fas fa-download"></i> Export CSV
+            </button>
+            <span className="badge badge-gray">{new Date().toLocaleDateString()}</span>
+          </div>
         </div>
         <div className="card-body" style={{ padding: 0 }}>
           <div style={{ overflowX: 'auto' }}>
@@ -62,13 +88,14 @@ const Reports = () => {
         <div className="card-body" style={{ padding: 0 }}>
           <div style={{ overflowX: 'auto' }}>
             <table className="data-table">
-              <thead><tr><th>Employee</th><th>Break #</th><th>Status</th><th>Requested</th><th>Started</th><th>End</th><th>Duration</th></tr></thead>
+              <thead><tr><th>Date</th><th>Employee</th><th>Break #</th><th>Status</th><th>Requested</th><th>Started</th><th>End</th><th>Duration</th></tr></thead>
               <tbody>
                 {report.allBreaks.length === 0 ? (
-                  <tr><td colSpan="7" style={{ textAlign: 'center', color: 'var(--gray-400)', padding: 30 }}>No break records today</td></tr>
+                  <tr><td colSpan="8" style={{ textAlign: 'center', color: 'var(--gray-400)', padding: 30 }}>No break records today</td></tr>
                 ) : (
                   [...report.allBreaks].sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt)).map(b => (
                     <tr key={b._id}>
+                      <td>{fmtDate(b.date || b.requestedAt)}</td>
                       <td><strong>{b.userName}</strong></td>
                       <td>Break {b.breakNumber}</td>
                       <td>
@@ -116,6 +143,9 @@ const Reports = () => {
         .data-table td { padding: 12px 16px; border-bottom: 1px solid var(--gray-100); color: var(--gray-700); }
         .data-table tr:hover td { background: var(--gray-50); }
         .pulse { animation: pulse 2s ease-in-out infinite; }
+        .btn { padding: 14px; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
         @media (max-width: 480px) { .stats-grid { gap: 8px; } .stat-card { padding: 12px; } .stat-value { font-size: 18px; } }
       `}</style>
     </div>
@@ -127,6 +157,7 @@ const StatCard = ({ icon, value, label, color }) => (
 );
 
 const fmtTime = (d) => d ? new Date(d).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : '-';
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-';
 const fmtDur = (s) => {
   if (!s || s < 0) return '0:00';
   const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;

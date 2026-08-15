@@ -7,8 +7,8 @@ const { isApprover } = require('../middleware/role');
 
 // @route   GET /api/users
 // @desc    Get all users
-// @access  Private (Admin, Supervisor, Team Leader, Coordinator only)
-router.get('/', auth, isApprover, async (req, res) => {
+// @access  Private (all authenticated users)
+router.get('/', auth, async (req, res) => {
   try {
     const users = await User.find().select('-password').sort({ createdAt: -1 });
     res.json(users);

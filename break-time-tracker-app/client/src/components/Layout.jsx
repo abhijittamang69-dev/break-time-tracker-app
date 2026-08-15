@@ -18,9 +18,6 @@ const Layout = () => {
   const [notificationMsg, setNotificationMsg] = useState('');
   const audioContextRef = useRef(null);
 
-  const isApprover = ['Supervisor', 'Team Leader', 'Coordinator', 'Admin'].includes(user?.role);
-  const isAdmin = user?.role === 'Admin';
-
   const currentPage = location.pathname === '/' ? 'dashboard' : location.pathname.slice(1);
 
   // Play notification sound using Web Audio API (no external files needed)

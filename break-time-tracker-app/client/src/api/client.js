@@ -9,11 +9,15 @@ const api = axios.create({
   }
 });
 
-// Add auth token to requests
+// Add auth token and device token to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  const deviceToken = localStorage.getItem('deviceToken');
+  if (deviceToken) {
+    config.headers['X-Device-Token'] = deviceToken;
   }
   return config;
 });

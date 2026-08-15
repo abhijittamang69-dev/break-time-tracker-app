@@ -266,6 +266,7 @@ const Dashboard = () => {
             <span className="badge badge-warning">{pendingBreaks.length} pending</span>
           </div>
           <div className="card-body" style={{ padding: 0 }}>
+            <div style={{ overflowX: 'auto' }}>
             <table className="data-table">
               <thead><tr><th>Employee</th><th>Shift</th><th>Break #</th><th>Requested</th><th>Duration</th><th>Actions</th></tr></thead>
               <tbody>
@@ -300,6 +301,7 @@ const Dashboard = () => {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       )}
@@ -318,6 +320,7 @@ const Dashboard = () => {
               <div style={{ fontSize: 13, color: 'var(--gray-500)', marginTop: 4 }}>All staff are available at their workstations</div>
             </div>
           ) : (
+            <div style={{ overflowX: 'auto' }}>
             <table className="data-table">
               <thead><tr><th>Employee</th><th>Break #</th><th>Started</th><th>Duration</th><th>Approved By</th></tr></thead>
               <tbody>
@@ -339,6 +342,7 @@ const Dashboard = () => {
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>
@@ -386,7 +390,7 @@ const Dashboard = () => {
         .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .alert { padding: 14px 16px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 10px; font-size: 14px; margin-bottom: 16px; }
         .alert-warning { background: var(--warning-light); color: var(--warning); border: 1px solid #fbd5d5; }
-        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 500px; }
         .data-table th { text-align: left; padding: 12px 16px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 1px solid var(--gray-200); }
         .data-table td { padding: 12px 16px; border-bottom: 1px solid var(--gray-100); color: var(--gray-700); }
         .data-table tr:hover td { background: var(--gray-50); }

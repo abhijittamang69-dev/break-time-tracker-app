@@ -121,10 +121,6 @@ const Users = () => {
                   <i className="fas fa-trash" style={{ color: 'var(--warning)', fontSize: 12 }}></i>
                 </button>
               )}
-                <button className="header-btn" onClick={() => handleDelete(u._id)} title="Delete" style={{ marginLeft: 8 }}>
-                  <i className="fas fa-trash" style={{ color: 'var(--warning)', fontSize: 12 }}></i>
-                </button>
-              )}
             </div>
           ))}
         </div>

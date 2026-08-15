@@ -103,6 +103,7 @@ const Devices = () => {
               <p style={{ fontSize: 13, color: 'var(--gray-500)' }}>Devices will appear here when users login.</p>
             </div>
           ) : (
+            <div style={{ overflowX: 'auto' }}>
             <table className="data-table">
               <thead>
                 <tr><th>User</th><th>Device</th><th>Status</th><th>Last Used</th><th>Actions</th></tr>
@@ -141,6 +142,7 @@ const Devices = () => {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>
@@ -164,7 +166,7 @@ const Devices = () => {
         .badge-success { background: var(--success-light); color: var(--success); }
         .badge-warning { background: var(--warning-light); color: var(--warning); }
         .badge-gray { background: var(--gray-100); color: var(--gray-600); }
-        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 500px; }
         .data-table th { text-align: left; padding: 12px 16px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 1px solid var(--gray-200); }
         .data-table td { padding: 12px 16px; border-bottom: 1px solid var(--gray-100); color: var(--gray-700); }
         .data-table tr:hover td { background: var(--gray-50); }

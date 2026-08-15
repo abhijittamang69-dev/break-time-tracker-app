@@ -8,11 +8,6 @@ const Reports = () => {
   const [loading, setLoading] = useState(true);
 
   const isApprover = ['Supervisor', 'Team Leader', 'Coordinator', 'Admin'].includes(user?.role);
-import { getReports } from '../api/breaks';
-
-const Reports = () => {
-  const [report, setReport] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => { fetchReports(); }, []);
 

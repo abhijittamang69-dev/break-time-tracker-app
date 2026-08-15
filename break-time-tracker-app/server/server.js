@@ -17,12 +17,14 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/api/auth', require('./routes/auth'));
-// Device auth middleware applied to all protected routes
+
+// Protected routes: auth first, then device auth
+const { auth } = require('./middleware/auth');
 const { deviceAuth } = require('./middleware/device');
-app.use('/api/users', deviceAuth, require('./routes/users'));
-app.use('/api/breaks', deviceAuth, require('./routes/breaks'));
-app.use('/api/settings', deviceAuth, require('./routes/settings'));
-app.use('/api/devices', deviceAuth, require('./routes/devices'));
+app.use('/api/users', auth, deviceAuth, require('./routes/users'));
+app.use('/api/breaks', auth, deviceAuth, require('./routes/breaks'));
+app.use('/api/settings', auth, deviceAuth, require('./routes/settings'));
+app.use('/api/devices', auth, deviceAuth, require('./routes/devices'));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

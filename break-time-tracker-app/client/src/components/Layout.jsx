@@ -232,7 +232,7 @@ const Layout = () => {
         ))}
       </nav>
 
-      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+      {showSettings && <SettingsModal isAdmin={isAdmin} onClose={() => setShowSettings(false)} />}
 
       <style>{`
         @keyframes slideDown {

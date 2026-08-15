@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { changePassword } from '../api/auth';
 import { getSettings, updateSettings } from '../api/settings';
 
-const SettingsModal = ({ onClose }) => {
+const SettingsModal = ({ isAdmin, onClose }) => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -75,9 +75,11 @@ const SettingsModal = ({ onClose }) => {
           <button className={`modal-tab ${activeTab === 'password' ? 'active' : ''}`} onClick={() => { setActiveTab('password'); setMessage(''); setError(''); }}>
             <i className="fas fa-lock"></i> Password
           </button>
-          <button className={`modal-tab ${activeTab === 'system' ? 'active' : ''}`} onClick={() => { setActiveTab('system'); setMessage(''); setError(''); }}>
-            <i className="fas fa-sliders-h"></i> System
-          </button>
+          {isAdmin && (
+            <button className={`modal-tab ${activeTab === 'system' ? 'active' : ''}`} onClick={() => { setActiveTab('system'); setMessage(''); setError(''); }}>
+              <i className="fas fa-sliders-h"></i> System
+            </button>
+          )}
         </div>
         {message && <div className="alert alert-success" style={{ margin: '16px 24px 0' }}><i className="fas fa-check-circle"></i> {message}</div>}
         {error && <div className="alert alert-warning" style={{ margin: '16px 24px 0' }}><i className="fas fa-exclamation-circle"></i> {error}</div>}

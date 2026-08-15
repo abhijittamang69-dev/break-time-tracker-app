@@ -32,6 +32,12 @@ const Dashboard = () => {
       setSettings(settingsRes.data);
       if (pendingRes) setPendingBreaks(pendingRes.data);
     } catch (err) {
+      const msg = err.response?.data?.description || err.response?.data?.message || 'Failed to load data';
+      showToast(msg, 'error');
+    } finally {
+      setLoading(false);
+    }
+    } catch (err) {
       showToast('Failed to load data', 'error');
     } finally {
       setLoading(false);

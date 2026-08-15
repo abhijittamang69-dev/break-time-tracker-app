@@ -1,0 +1,38 @@
+const mongoose = require('mongoose');
+
+const deviceSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    index: true
+  },
+  deviceToken: {
+    type: String,
+    required: true,
+    unique: true,
+    index: true
+  },
+  deviceName: {
+    type: String,
+    default: 'Unknown Device'
+  },
+  userAgent: {
+    type: String,
+    default: ''
+  },
+  lastUsed: {
+    type: Date,
+    default: Date.now
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  }
+}, {
+  timestamps: true
+});
+
+deviceSchema.index({ userId: 1, deviceToken: 1 });
+
+module.exports = mongoose.model('Device', deviceSchema);

@@ -1,0 +1,23 @@
+{
+  "name": "break-time-tracker-app",
+  "version": "1.0.0",
+  "description": "RMC Break Time QR Code Tracking Application",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "build": "cd client && npm run build",
+    "install-deps": "npm install && cd server && npm install && cd ../client && npm install"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["break-tracker", "qr-code", "rmc"],
+  "author": "RMC Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

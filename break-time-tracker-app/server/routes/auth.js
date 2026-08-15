@@ -1,0 +1,111 @@
+const express = require('express');
+const bcrypt = require('bcryptjs');
+const router = express.Router();
+const User = require('../models/User');
+const { auth, generateToken } = require('../middleware/auth');
+
+router.post('/login', async (req, res) => {
+  try {
+    const { username, password, deviceToken, deviceName, userAgent } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Please provide username and password' });
+    }
+    const user = await User.findOne({ username: username.toLowerCase() });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    // Check if device token is provided and valid
+    if (deviceToken) {
+      const Device = require('../models/Device');
+      let device = await Device.findOne({ deviceToken });
+
+      if (device) {
+        // Device exists - check if active and belongs to user
+        if (!device.isActive) {
+          return res.status(403).json({
+            message: 'DEVICE_DEACTIVATED',
+            description: 'This device has been deactivated. Please contact your supervisor.'
+          });
+        }
+        // Update device info
+        device.userId = user._id;
+        device.lastUsed = new Date();
+        if (deviceName) device.deviceName = deviceName;
+        if (userAgent) device.userAgent = userAgent;
+        await device.save();
+      } else {
+        // New device - auto-register on first login
+        device = new Device({
+          userId: user._id,
+          deviceToken,
+          deviceName: deviceName || 'Unknown Device',
+          userAgent: userAgent || '',
+          lastUsed: new Date(),
+          isActive: true
+        });
+        await device.save();
+      }
+    }
+
+    const token = generateToken(user._id);
+    res.json({
+      token,
+      user: {
+        id: user._id.toString(),
+        username: user.username,
+        name: user.name,
+        role: user.role,
+        shift: user.shift
+      }
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/change-password', auth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Please provide current and new password' });
+    }
+    if (newPassword.length < 4) {
+      return res.status(400).json({ message: 'Password must be at least 4 characters' });
+    }
+    const user = await User.findById(req.user._id);
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Current password is incorrect' });
+    }
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.get('/me', auth, async (req, res) => {
+  try {
+    res.json({
+      id: req.user._id.toString(),
+      username: req.user.username,
+      name: req.user.name,
+      role: req.user.role,
+      shift: req.user.shift
+    });
+  } catch (error) {
+    console.error('Get me error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+module.exports = router;

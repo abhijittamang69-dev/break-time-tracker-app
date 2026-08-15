@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Setting = require('../models/Setting');
 const { auth } = require('../middleware/auth');
+const { isAdmin } = require('../middleware/role');
 
 router.get('/', auth, async (req, res) => {
   try {
@@ -16,7 +17,7 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-router.put('/', auth, async (req, res) => {
+router.put('/', auth, isAdmin, async (req, res) => {
   try {
     let settings = await Setting.findOne();
     if (!settings) {

@@ -10,7 +10,7 @@ const Devices = () => {
   const [toast, setToast] = useState(null);
   const [actionId, setActionId] = useState(null);
 
-  const isAdmin = ['Supervisor', 'Team Leader', 'Coordinator', 'Admin'].includes(user?.role);
+  const isAdmin = user?.role === 'Admin';
 
   useEffect(() => { fetchDevices(); }, []);
 

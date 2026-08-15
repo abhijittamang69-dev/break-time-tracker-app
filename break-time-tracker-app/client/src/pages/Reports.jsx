@@ -1,5 +1,14 @@
 import { useState, useEffect } from 'react';
 import { getReports } from '../api/breaks';
+import { useAuth } from '../context/AuthContext';
+
+const Reports = () => {
+  const { user } = useAuth();
+  const [report, setReport] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const isApprover = ['Supervisor', 'Team Leader', 'Coordinator', 'Admin'].includes(user?.role);
+import { getReports } from '../api/breaks';
 
 const Reports = () => {
   const [report, setReport] = useState(null);
@@ -53,9 +62,11 @@ const Reports = () => {
         <div className="card-header">
           <h3><i className="fas fa-users" style={{ marginRight: 8, color: 'var(--primary)' }}></i>Staff Break Summary</h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button className="btn btn-primary" onClick={downloadCSV} style={{ width: 'auto', padding: '8px 16px', fontSize: 13 }}>
-              <i className="fas fa-download"></i> Export CSV
-            </button>
+            {isApprover && (
+              <button className="btn btn-primary" onClick={downloadCSV} style={{ width: 'auto', padding: '8px 16px', fontSize: 13 }}>
+                <i className="fas fa-download"></i> Export CSV
+              </button>
+            )}
             <span className="badge badge-gray">{new Date().toLocaleDateString()}</span>
           </div>
         </div>

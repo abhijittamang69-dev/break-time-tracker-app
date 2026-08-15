@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getUsers, createUser, deleteUser } from '../api/users';
+import { resetPassword } from '../api/auth';
 import { useAuth } from '../context/AuthContext';
 import Toast from '../components/Toast';
 
@@ -44,6 +45,21 @@ const Users = () => {
       fetchUsers();
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to delete', 'error');
+    }
+  };
+
+  const handleResetPassword = async (id, name) => {
+    const newPassword = prompt(`Reset password for ${name}\n\nEnter new password (min 4 characters):`);
+    if (!newPassword) return;
+    if (newPassword.length < 4) {
+      showToast('Password must be at least 4 characters', 'error');
+      return;
+    }
+    try {
+      await resetPassword(id, newPassword);
+      showToast(`Password reset for ${name}`, 'success');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to reset password', 'error');
     }
   };
 
@@ -117,9 +133,16 @@ const Users = () => {
                 <div style={{ fontSize: 12, color: 'var(--gray-500)' }}>{u.role} · {u.shift} Shift</div>
               </div>
               {isApprover && u._id !== currentUser?.id && u.role !== 'Admin' && (
-                <button className="header-btn" onClick={() => handleDelete(u._id)} title="Delete" style={{ marginLeft: 8 }}>
-                  <i className="fas fa-trash" style={{ color: 'var(--warning)', fontSize: 12 }}></i>
-                </button>
+                <>
+                  {u.role === 'Operator' && (
+                    <button className="header-btn" onClick={() => handleResetPassword(u._id, u.name)} title="Reset Password" style={{ marginLeft: 8 }}>
+                      <i className="fas fa-key" style={{ color: 'var(--primary)', fontSize: 12 }}></i>
+                    </button>
+                  )}
+                  <button className="header-btn" onClick={() => handleDelete(u._id)} title="Delete" style={{ marginLeft: 8 }}>
+                    <i className="fas fa-trash" style={{ color: 'var(--warning)', fontSize: 12 }}></i>
+                  </button>
+                </>
               )}
             </div>
           ))}

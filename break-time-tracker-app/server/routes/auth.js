@@ -93,6 +93,43 @@ router.post('/change-password', auth, async (req, res) => {
   }
 });
 
+// @route   POST /auth/reset-password
+// @desc    Reset an operator's password (Approver only)
+// @access  Private (Approver)
+router.post('/reset-password', auth, async (req, res) => {
+  try {
+    if (!['Supervisor', 'Team Leader', 'Coordinator', 'Admin'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Only approvers can reset passwords' });
+    }
+
+    const { userId, newPassword } = req.body;
+    if (!userId || !newPassword) {
+      return res.status(400).json({ message: 'Please provide userId and newPassword' });
+    }
+    if (newPassword.length < 4) {
+      return res.status(400).json({ message: 'Password must be at least 4 characters' });
+    }
+
+    const targetUser = await User.findById(userId);
+    if (!targetUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Only allow resetting Operator passwords
+    if (targetUser.role !== 'Operator') {
+      return res.status(403).json({ message: 'Can only reset Operator passwords' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    targetUser.password = await bcrypt.hash(newPassword, salt);
+    await targetUser.save();
+    res.json({ message: `Password reset successfully for ${targetUser.name}` });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 router.get('/me', auth, async (req, res) => {
   try {
     res.json({

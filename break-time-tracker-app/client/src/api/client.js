@@ -1,4 +1,5 @@
 import axios from 'axios';
+import storage from '../utils/storage';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -11,11 +12,11 @@ const api = axios.create({
 
 // Add auth token and device token to requests
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = storage.get('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  const deviceToken = localStorage.getItem('deviceToken');
+  const deviceToken = storage.get('deviceToken');
   if (deviceToken) {
     config.headers['X-Device-Token'] = deviceToken;
   }
@@ -27,8 +28,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      storage.remove('token');
+      storage.remove('user');
       // Use window.location for full page reload to clear React state
       if (window.location.pathname !== '/') {
         window.location.href = '/';

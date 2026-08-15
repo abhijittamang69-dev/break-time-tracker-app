@@ -1,12 +1,14 @@
+import storage from '../utils/storage';
+
 const DeviceAccessDenied = () => {
-  const errorType = localStorage.getItem('deviceError');
-  const errorDesc = localStorage.getItem('deviceErrorDesc');
+  const errorType = storage.get('deviceError');
+  const errorDesc = storage.get('deviceErrorDesc');
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('deviceError');
-    localStorage.removeItem('deviceErrorDesc');
+    storage.remove('token');
+    storage.remove('user');
+    storage.remove('deviceError');
+    storage.remove('deviceErrorDesc');
     window.location.href = '/';
   };
 

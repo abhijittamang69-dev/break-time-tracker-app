@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { login } from '../api/auth';
+import storage from '../utils/storage';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -17,10 +18,10 @@ const Login = () => {
     setLoading(true);
     try {
       // Generate or retrieve device token
-      let deviceToken = localStorage.getItem('deviceToken');
+      let deviceToken = storage.get('deviceToken');
       if (!deviceToken) {
         deviceToken = 'dev_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-        localStorage.setItem('deviceToken', deviceToken);
+        storage.set('deviceToken', deviceToken);
       }
 
       // Get device info
@@ -30,8 +31,8 @@ const Login = () => {
       const res = await login(username, password, deviceToken, deviceName, userAgent);
       authLogin(res.data.token, res.data.user);
       // Clear any previous device errors
-      localStorage.removeItem('deviceError');
-      localStorage.removeItem('deviceErrorDesc');
+      storage.remove('deviceError');
+      storage.remove('deviceErrorDesc');
       navigate('/');
     } catch (err) {
       const errMsg = err.response?.data?.message;

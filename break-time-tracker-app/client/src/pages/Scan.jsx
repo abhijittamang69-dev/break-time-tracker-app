@@ -103,7 +103,7 @@ const Scan = () => {
                 <i className="fas fa-qrcode" style={{ fontSize: 64, color: 'var(--gray-400)' }}></i>
               </div>
               <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--gray-700)', marginBottom: 4 }}>Break Area QR Code</div>
-              <div style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 20 }}>QR Mode: 60 min · Up to 4 breaks per shift</div>
+              <div style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 20 }}>QR Mode: 15 min · Up to 4 breaks per shift</div>
 
               {myActiveBreak ? (
                 <button className="scan-btn" onClick={startScanner} disabled={actionLoading} style={{ borderColor: 'var(--warning)', background: 'var(--warning-light)', color: 'var(--warning)' }}>
@@ -127,7 +127,7 @@ const Scan = () => {
                 <button className="scan-btn" onClick={startScanner} disabled={actionLoading}>
                   <i className="fas fa-paper-plane"></i>
                   <span>{isOperator ? 'Request Break' : 'Scan QR'}</span>
-                  <span style={{ fontSize: 12, fontWeight: 400, opacity: 0.7 }}>{isOperator ? 'Tap to request break approval (60 min)' : 'Supervisors use Dashboard to approve'}</span>
+                  <span style={{ fontSize: 12, fontWeight: 400, opacity: 0.7 }}>{isOperator ? 'Tap to request break approval (15 min)' : 'Supervisors use Dashboard to approve'}</span>
                 </button>
               )}
 
@@ -150,7 +150,7 @@ const Scan = () => {
         <div className="card-body">
           <div className="break-list">
             {[
-              { icon: 'fa-paper-plane', title: 'Request Break', desc: 'Operator scans QR to request a break (60 min, max 4 per shift)' },
+              { icon: 'fa-paper-plane', title: 'Request Break', desc: 'Operator scans QR to request a break (15 min, max 4 per shift)' },
               { icon: 'fa-user-check', title: 'Supervisor Approval', desc: 'Supervisor/Team Leader/Coordinator reviews and approves' },
               { icon: 'fa-play-circle', title: 'Break Starts', desc: 'Once approved, break timer begins automatically' },
               { icon: 'fa-bell', title: '5-Min Reminder', desc: 'Operator gets notified 5 minutes before break ends' },

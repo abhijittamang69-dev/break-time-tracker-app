@@ -50,6 +50,8 @@ const Dashboard = () => {
   const isQrLocked = currentMode === 'qr';
 
   const modeMaxBreaks = isQrLocked ? 4 : 3;
+  const modeDefaultDuration = 15; // each break is 15 minutes
+  const modeMaxMinutes = isQrLocked ? 60 : 45; // 4x15 or 3x15 total shift minutes
   const modeDefaultDuration = isQrLocked ? 60 : 45;
   const modeMaxMinutes = isQrLocked ? 240 : 135; // 4x60 or 3x45
 
@@ -213,7 +215,7 @@ const Dashboard = () => {
               <i className={`fas ${currentMode === 'qr' ? 'fa-qrcode' : 'fa-hand-pointer'}`}></i>
               <div>
                 <div className="mode-title">{currentMode === 'qr' ? 'QR Code Mode' : 'Manual Mode'}</div>
-                <div className="mode-sub">{currentMode === 'qr' ? '60 min · Up to 4 breaks per shift' : '45 min · Up to 3 breaks per shift'}</div>
+                <div className="mode-sub">{currentMode === 'qr' ? '15 min each · 4 breaks per shift (60 min total)' : '15 min each · 3 breaks per shift (45 min total)'}</div>
               </div>
             </div>
           )}
@@ -306,9 +308,7 @@ const Dashboard = () => {
                       <td>Break {b.breakNumber}</td>
                       <td>{fmtTime(b.requestedAt)}</td>
                       <td>
-                        <span style={{ fontWeight: 600, fontSize: 13 }}>
-                          {b.mode === 'qr' ? '60' : '45'} min
-                        </span>
+                        <span style={{ fontWeight: 600, fontSize: 13 }}>15 min</span>
                         <span className={`badge ${b.mode === 'qr' ? 'badge-blue' : 'badge-gray'}`} style={{ marginLeft: 6, fontSize: 10 }}>
                           {b.mode === 'qr' ? 'QR' : 'Manual'}
                         </span>

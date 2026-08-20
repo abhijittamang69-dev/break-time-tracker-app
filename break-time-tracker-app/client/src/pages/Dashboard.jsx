@@ -207,6 +207,16 @@ const Dashboard = () => {
            <span className="badge badge-success"><i className="fas fa-check"></i> Available</span>}
         </div>
         <div className="card-body">
+          {/* Mode indicator banner */}
+          {currentMode && (
+            <div className={`mode-banner ${currentMode}`}>
+              <i className={`fas ${currentMode === 'qr' ? 'fa-qrcode' : 'fa-hand-pointer'}`}></i>
+              <div>
+                <div className="mode-title">{currentMode === 'qr' ? 'QR Code Mode' : 'Manual Mode'}</div>
+                <div className="mode-sub">{currentMode === 'qr' ? '60 min · Up to 4 breaks per shift' : '45 min · Up to 3 breaks per shift'}</div>
+              </div>
+            </div>
+          )}
           {myActive ? (
             <>
               <div className="break-timer">
@@ -384,6 +394,12 @@ const Dashboard = () => {
         .badge-warning { background: var(--warning-light); color: var(--warning); }
         .badge-orange { background: var(--orange-light); color: var(--orange); }
         .badge-gray { background: var(--gray-100); color: var(--gray-600); }
+        .mode-banner { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--radius-sm); margin-bottom: 16px; font-size: 14px; }
+        .mode-banner.qr { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+        .mode-banner.manual { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+        .mode-banner i { font-size: 20px; }
+        .mode-title { font-weight: 700; font-size: 14px; }
+        .mode-sub { font-size: 12px; opacity: 0.8; margin-top: 2px; }
         .break-timer { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; border-radius: var(--radius); padding: 24px; text-align: center; margin-bottom: 20px; }
         .timer-label { font-size: 13px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
         .timer-value { font-size: 48px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -1px; }

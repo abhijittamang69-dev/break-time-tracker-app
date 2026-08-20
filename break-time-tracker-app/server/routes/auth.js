@@ -74,6 +74,17 @@ router.post('/login', async (req, res) => {
         await device.save();
       }
     } else {
+      // New device - check if non-admin user already has a device
+      if (!isAdminUser) {
+        const existingDevice = await Device.findOne({ userId: user._id });
+        if (existingDevice) {
+          return res.status(403).json({
+            message: 'DEVICE_LIMIT_REACHED',
+            description: 'You already have a registered device. Contact your administrator to switch devices.'
+          });
+        }
+      }
+
       // New device
       if (isAdminUser) {
         // Admin - auto-approve

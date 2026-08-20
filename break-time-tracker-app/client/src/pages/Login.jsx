@@ -45,6 +45,10 @@ const Login = () => {
         setError(errDesc || 'This device has been deactivated. Please contact your administrator.');
       } else if (errMsg === 'DEVICE_REQUIRED') {
         setError(errDesc || 'Device token is required.');
+      } else if (errMsg === 'DEVICE_LIMIT_REACHED') {
+        setError(errDesc || 'You already have a registered device. Contact your administrator to switch devices.');
+      } else {
+        setError(errDesc || 'Device token is required.');
       } else {
         setError(errMsg || 'Login failed');
       }

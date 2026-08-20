@@ -32,6 +32,11 @@ router.post('/login', async (req, res) => {
     const isAdminUser = user.role === 'Admin';
 
     if (device) {
+      // Migrate old devices that don't have a status field yet
+      if (!device.status) {
+        device.status = 'approved';
+        device.isActive = true;
+      }
       // Admin bypass - always approve their device
       if (isAdminUser) {
         device.status = 'approved';

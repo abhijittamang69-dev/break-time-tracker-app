@@ -7,3 +7,4 @@ export const approveDevice = (id) => api.post(`/devices/approve/${id}`);
 export const rejectDevice = (id) => api.post(`/devices/reject/${id}`);
 export const deactivateDevice = (id) => api.post(`/devices/deactivate/${id}`);
 export const activateDevice = (id) => api.post(`/devices/activate/${id}`);
+export const cleanupDevices = () => api.post('/devices/cleanup');

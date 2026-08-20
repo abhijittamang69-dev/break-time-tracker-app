@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Device = require('../models/Device');
+const User = require('../models/User');
 const { auth } = require('../middleware/auth');
 const { isAdmin } = require('../middleware/role');
 
@@ -19,21 +20,42 @@ router.get('/', auth, async (req, res) => {
 });
 
 // @route   GET /api/devices/all
-// @desc    Get all devices (admin only)
+// @desc    Get all devices with status (admin only) - filters out legacy devices
 // @access  Private (Admin only)
 router.get('/all', auth, isAdmin, async (req, res) => {
   try {
-    // Auto-migrate old devices without status field
-    await Device.updateMany(
-      { status: { $exists: false } },
-      { $set: { status: 'approved', isActive: true } }
-    );
-    const devices = await Device.find()
+    // Only return devices that have the new status field (hides legacy/old data)
+    const devices = await Device.find({ status: { $exists: true } })
       .populate('userId', 'name username role')
       .sort({ createdAt: -1 });
     res.json(devices);
   } catch (error) {
     console.error('Get all devices error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   POST /api/devices/cleanup
+// @desc    Delete all legacy devices (without status) and non-admin approved devices - admin only
+// @access  Private (Admin only)
+router.post('/cleanup', auth, isAdmin, async (req, res) => {
+  try {
+    // Delete all devices without status (legacy old data)
+    const legacyResult = await Device.deleteMany({ status: { $exists: false } });
+    // Also delete all approved devices for non-admin users (fresh start)
+    const nonAdminUsers = await User.find({ role: { $ne: 'Admin' } }).select('_id');
+    const nonAdminIds = nonAdminUsers.map(u => u._id.toString());
+    const approvedResult = await Device.deleteMany({
+      userId: { $in: nonAdminIds },
+      status: { $in: ['approved', 'pending', 'rejected'] }
+    });
+    res.json({
+      message: 'Cleanup completed',
+      legacyDeleted: legacyResult.deletedCount,
+      userDevicesDeleted: approvedResult.deletedCount
+    });
+  } catch (error) {
+    console.error('Cleanup error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -99,7 +121,7 @@ router.post('/approve/:id', auth, isAdmin, async (req, res) => {
     device.status = 'approved';
     device.isActive = true;
     await device.save();
-    res.json({ message: 'Device approved successfully. Other devices for this user have been deactivated.' });
+    res.json({ message: 'Device approved successfully' });
   } catch (error) {
     console.error('Approve device error:', error);
     res.status(500).json({ message: 'Server error' });

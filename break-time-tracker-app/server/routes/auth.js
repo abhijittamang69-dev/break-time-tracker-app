@@ -50,20 +50,20 @@ router.post('/login', async (req, res) => {
         // Non-admin - check status
         if (device.status === 'pending') {
           return res.status(403).json({
-            message: 'DEVICE_PENDING',
-            description: 'Your device is pending admin approval. Please contact your administrator.'
+            message: 'DEVICE_UNAUTHORIZED',
+            description: 'Unauthorized device. Please contact your administrator.'
           });
         }
         if (device.status === 'rejected') {
           return res.status(403).json({
-            message: 'DEVICE_REJECTED',
-            description: 'Your device has been rejected. Please contact your administrator.'
+            message: 'DEVICE_UNAUTHORIZED',
+            description: 'Unauthorized device. Please contact your administrator.'
           });
         }
         if (device.status === 'approved' && !device.isActive) {
           return res.status(403).json({
-            message: 'DEVICE_DEACTIVATED',
-            description: 'This device has been deactivated. Please contact your administrator.'
+            message: 'DEVICE_UNAUTHORIZED',
+            description: 'Unauthorized device. Please contact your administrator.'
           });
         }
         // Approved and active - update info and allow login
@@ -100,8 +100,8 @@ router.post('/login', async (req, res) => {
         });
         await device.save();
         return res.status(403).json({
-          message: 'DEVICE_PENDING',
-          description: 'This is a new device. It has been registered and is pending admin approval. Please contact your administrator.'
+          message: 'DEVICE_UNAUTHORIZED',
+          description: 'Unauthorized device. Please contact your administrator.'
         });
       }
     }

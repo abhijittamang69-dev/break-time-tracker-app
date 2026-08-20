@@ -29,49 +29,76 @@ router.post('/login', async (req, res) => {
 
     const Device = require('../models/Device');
     let device = await Device.findOne({ deviceToken });
+    const isAdminUser = user.role === 'Admin';
 
     if (device) {
-      // Device exists - check status
-      if (device.status === 'pending') {
+      // Admin bypass - always approve their device
+      if (isAdminUser) {
+        device.status = 'approved';
+        device.isActive = true;
+        device.userId = user._id;
+        device.lastUsed = new Date();
+        if (deviceName) device.deviceName = deviceName;
+        if (userAgent) device.userAgent = userAgent;
+        await device.save();
+      } else {
+        // Non-admin - check status
+        if (device.status === 'pending') {
+          return res.status(403).json({
+            message: 'DEVICE_PENDING',
+            description: 'Your device is pending admin approval. Please contact your administrator.'
+          });
+        }
+        if (device.status === 'rejected') {
+          return res.status(403).json({
+            message: 'DEVICE_REJECTED',
+            description: 'Your device has been rejected. Please contact your administrator.'
+          });
+        }
+        if (device.status === 'approved' && !device.isActive) {
+          return res.status(403).json({
+            message: 'DEVICE_DEACTIVATED',
+            description: 'This device has been deactivated. Please contact your administrator.'
+          });
+        }
+        // Approved and active - update info and allow login
+        device.userId = user._id;
+        device.lastUsed = new Date();
+        if (deviceName) device.deviceName = deviceName;
+        if (userAgent) device.userAgent = userAgent;
+        await device.save();
+      }
+    } else {
+      // New device
+      if (isAdminUser) {
+        // Admin - auto-approve
+        device = new Device({
+          userId: user._id,
+          deviceToken,
+          deviceName: deviceName || 'Unknown Device',
+          userAgent: userAgent || '',
+          lastUsed: new Date(),
+          status: 'approved',
+          isActive: true
+        });
+        await device.save();
+      } else {
+        // Non-admin - create as pending, block login
+        device = new Device({
+          userId: user._id,
+          deviceToken,
+          deviceName: deviceName || 'Unknown Device',
+          userAgent: userAgent || '',
+          lastUsed: new Date(),
+          status: 'pending',
+          isActive: false
+        });
+        await device.save();
         return res.status(403).json({
           message: 'DEVICE_PENDING',
-          description: 'Your device is pending admin approval. Please contact your administrator.'
+          description: 'This is a new device. It has been registered and is pending admin approval. Please contact your administrator.'
         });
       }
-      if (device.status === 'rejected') {
-        return res.status(403).json({
-          message: 'DEVICE_REJECTED',
-          description: 'Your device has been rejected. Please contact your administrator.'
-        });
-      }
-      if (device.status === 'approved' && !device.isActive) {
-        return res.status(403).json({
-          message: 'DEVICE_DEACTIVATED',
-          description: 'This device has been deactivated. Please contact your administrator.'
-        });
-      }
-      // Approved and active - update info and allow login
-      device.userId = user._id;
-      device.lastUsed = new Date();
-      if (deviceName) device.deviceName = deviceName;
-      if (userAgent) device.userAgent = userAgent;
-      await device.save();
-    } else {
-      // New device - create as pending, block login
-      device = new Device({
-        userId: user._id,
-        deviceToken,
-        deviceName: deviceName || 'Unknown Device',
-        userAgent: userAgent || '',
-        lastUsed: new Date(),
-        status: 'pending',
-        isActive: false
-      });
-      await device.save();
-      return res.status(403).json({
-        message: 'DEVICE_PENDING',
-        description: 'This is a new device. It has been registered and is pending admin approval. Please contact your administrator.'
-      });
     }
 
     const token = generateToken(user._id);

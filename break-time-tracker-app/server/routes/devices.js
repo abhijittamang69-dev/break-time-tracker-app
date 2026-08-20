@@ -23,6 +23,11 @@ router.get('/', auth, async (req, res) => {
 // @access  Private (Admin only)
 router.get('/all', auth, isAdmin, async (req, res) => {
   try {
+    // Auto-migrate old devices without status field
+    await Device.updateMany(
+      { status: { $exists: false } },
+      { $set: { status: 'approved', isActive: true } }
+    );
     const devices = await Device.find()
       .populate('userId', 'name username role')
       .sort({ createdAt: -1 });
@@ -85,10 +90,16 @@ router.post('/approve/:id', auth, isAdmin, async (req, res) => {
       return res.status(404).json({ message: 'Device not found' });
     }
 
+    // Deactivate all other approved devices for this user (one device per user)
+    await Device.updateMany(
+      { userId: device.userId, _id: { $ne: device._id }, status: 'approved' },
+      { $set: { isActive: false } }
+    );
+
     device.status = 'approved';
     device.isActive = true;
     await device.save();
-    res.json({ message: 'Device approved successfully' });
+    res.json({ message: 'Device approved successfully. Other devices for this user have been deactivated.' });
   } catch (error) {
     console.error('Approve device error:', error);
     res.status(500).json({ message: 'Server error' });

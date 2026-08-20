@@ -37,8 +37,14 @@ const Login = () => {
     } catch (err) {
       const errMsg = err.response?.data?.message;
       const errDesc = err.response?.data?.description;
-      if (errMsg === 'DEVICE_DEACTIVATED' || errMsg === 'DEVICE_NOT_REGISTERED') {
-        setError(errDesc || 'Device access restricted. Please contact your supervisor.');
+      if (errMsg === 'DEVICE_PENDING') {
+        setError(errDesc || 'Your device is pending admin approval. Please contact your administrator.');
+      } else if (errMsg === 'DEVICE_REJECTED') {
+        setError(errDesc || 'Your device has been rejected. Please contact your administrator.');
+      } else if (errMsg === 'DEVICE_DEACTIVATED') {
+        setError(errDesc || 'This device has been deactivated. Please contact your administrator.');
+      } else if (errMsg === 'DEVICE_REQUIRED') {
+        setError(errDesc || 'Device token is required.');
       } else {
         setError(errMsg || 'Login failed');
       }

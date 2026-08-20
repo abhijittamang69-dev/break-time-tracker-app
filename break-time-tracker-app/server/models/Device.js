@@ -25,14 +25,20 @@ const deviceSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
   isActive: {
     type: Boolean,
-    default: true
+    default: false
   }
 }, {
   timestamps: true
 });
 
 deviceSchema.index({ userId: 1, deviceToken: 1 });
+deviceSchema.index({ status: 1 });
 
 module.exports = mongoose.model('Device', deviceSchema);

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAllDevices, deactivateDevice, activateDevice } from '../api/devices';
+import { getAllDevices, approveDevice, rejectDevice, deactivateDevice, activateDevice } from '../api/devices';
 import { useAuth } from '../context/AuthContext';
 import Toast from '../components/Toast';
 
@@ -26,6 +26,28 @@ const Devices = () => {
   };
 
   const showToast = (message, type) => setToast({ message, type });
+
+  const handleApprove = async (id) => {
+    setActionId(id);
+    try {
+      await approveDevice(id);
+      showToast('Device approved successfully', 'success');
+      fetchDevices();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to approve', 'error');
+    } finally { setActionId(null); }
+  };
+
+  const handleReject = async (id) => {
+    setActionId(id);
+    try {
+      await rejectDevice(id);
+      showToast('Device rejected', 'success');
+      fetchDevices();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to reject', 'error');
+    } finally { setActionId(null); }
+  };
 
   const handleDeactivate = async (id) => {
     setActionId(id);
@@ -63,14 +85,72 @@ const Devices = () => {
     );
   }
 
-  const activeDevices = devices.filter(d => d.isActive);
-  const inactiveDevices = devices.filter(d => !d.isActive);
+  const pendingDevices = devices.filter(d => d.status === 'pending');
+  const approvedDevices = devices.filter(d => d.status === 'approved');
+  const rejectedDevices = devices.filter(d => d.status === 'rejected');
+
+  const DeviceTable = ({ list, showApprove, showReject, showDeactivate, showActivate }) => (
+    <div style={{ overflowX: 'auto' }}>
+      <table className="data-table">
+        <thead>
+          <tr><th>User</th><th>Device</th><th>Status</th><th>Registered</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {list.length === 0 ? (
+            <tr><td colSpan="5" style={{ textAlign: 'center', color: 'var(--gray-400)', padding: 30 }}>No devices</td></tr>
+          ) : (
+            list.map(d => (
+              <tr key={d._id}>
+                <td>
+                  <strong>{d.userId?.name || 'Unknown'}</strong><br/>
+                  <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>{d.userId?.username || ''} · {d.userId?.role || ''}</span>
+                </td>
+                <td>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>{d.deviceName || 'Unknown Device'}</div>
+                  <div style={{ fontSize: 11, color: 'var(--gray-400)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.userAgent || ''}</div>
+                </td>
+                <td>
+                  {d.status === 'pending' && <span className="badge badge-blue"><i className="fas fa-hourglass-half" style={{ fontSize: 8 }}></i> Pending</span>}
+                  {d.status === 'approved' && d.isActive && <span className="badge badge-success"><i className="fas fa-check-circle" style={{ fontSize: 8 }}></i> Active</span>}
+                  {d.status === 'approved' && !d.isActive && <span className="badge badge-warning"><i className="fas fa-ban" style={{ fontSize: 8 }}></i> Deactivated</span>}
+                  {d.status === 'rejected' && <span className="badge badge-gray"><i className="fas fa-times" style={{ fontSize: 8 }}></i> Rejected</span>}
+                </td>
+                <td>{d.createdAt ? new Date(d.createdAt).toLocaleDateString() : '-'}</td>
+                <td>
+                  {showApprove && (
+                    <button className="btn btn-success" onClick={() => handleApprove(d._id)} disabled={actionId === d._id} style={{ width: 'auto', padding: '8px 12px', fontSize: 12, marginRight: 6 }}>
+                      {actionId === d._id ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-check"></i>} Approve
+                    </button>
+                  )}
+                  {showReject && (
+                    <button className="btn btn-warning" onClick={() => handleReject(d._id)} disabled={actionId === d._id} style={{ width: 'auto', padding: '8px 12px', fontSize: 12 }}>
+                      {actionId === d._id ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-times"></i>} Reject
+                    </button>
+                  )}
+                  {showDeactivate && d.isActive && (
+                    <button className="btn btn-warning" onClick={() => handleDeactivate(d._id)} disabled={actionId === d._id} style={{ width: 'auto', padding: '8px 12px', fontSize: 12 }}>
+                      {actionId === d._id ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-ban"></i>} Deactivate
+                    </button>
+                  )}
+                  {showActivate && !d.isActive && (
+                    <button className="btn btn-success" onClick={() => handleActivate(d._id)} disabled={actionId === d._id} style={{ width: 'auto', padding: '8px 12px', fontSize: 12 }}>
+                      {actionId === d._id ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-check"></i>} Activate
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
 
   return (
     <div className="animate-fade-in">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       <h1 className="page-title">Device Management</h1>
-      <p className="page-subtitle">Manage registered devices and access control</p>
+      <p className="page-subtitle">Approve, reject, and manage registered devices</p>
 
       <div className="stats-grid">
         <div className="stat-card">
@@ -80,83 +160,69 @@ const Devices = () => {
         </div>
         <div className="stat-card">
           <div className="stat-icon green"><i className="fas fa-check-circle"></i></div>
-          <div className="stat-value">{activeDevices.length}</div>
+          <div className="stat-value">{approvedDevices.filter(d => d.isActive).length}</div>
           <div className="stat-label">Active</div>
         </div>
         <div className="stat-card">
+          <div className="stat-icon orange"><i className="fas fa-hourglass-half"></i></div>
+          <div className="stat-value">{pendingDevices.length}</div>
+          <div className="stat-label">Pending</div>
+        </div>
+        <div className="stat-card">
           <div className="stat-icon red"><i className="fas fa-ban"></i></div>
-          <div className="stat-value">{inactiveDevices.length}</div>
-          <div className="stat-label">Deactivated</div>
+          <div className="stat-value">{rejectedDevices.length + approvedDevices.filter(d => !d.isActive).length}</div>
+          <div className="stat-label">Inactive</div>
         </div>
       </div>
 
+      {/* Pending Devices */}
+      {pendingDevices.length > 0 && (
+        <div className="card" style={{ border: '2px solid var(--primary)', marginBottom: 16 }}>
+          <div className="card-header" style={{ background: 'var(--primary-light)' }}>
+            <h3><i className="fas fa-hourglass-half" style={{ marginRight: 8, color: 'var(--primary)' }}></i>Pending Approval</h3>
+            <span className="badge badge-blue">{pendingDevices.length} pending</span>
+          </div>
+          <div className="card-body" style={{ padding: 0 }}>
+            <DeviceTable list={pendingDevices} showApprove showReject />
+          </div>
+        </div>
+      )}
+
+      {/* Approved Devices */}
       <div className="card">
         <div className="card-header">
-          <h3><i className="fas fa-mobile-alt" style={{ marginRight: 8, color: 'var(--primary)' }}></i>Registered Devices</h3>
-          <span className="badge badge-gray">{devices.length} devices</span>
+          <h3><i className="fas fa-check-circle" style={{ marginRight: 8, color: 'var(--success)' }}></i>Approved Devices</h3>
+          <span className="badge badge-success">{approvedDevices.length} approved</span>
         </div>
         <div className="card-body" style={{ padding: 0 }}>
-          {devices.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 40 }}>
-              <i className="fas fa-mobile-alt" style={{ fontSize: 48, color: 'var(--gray-300)', marginBottom: 16 }}></i>
-              <h4 style={{ fontSize: 16, fontWeight: 600, color: 'var(--gray-700)' }}>No devices registered</h4>
-              <p style={{ fontSize: 13, color: 'var(--gray-500)' }}>Devices will appear here when users login.</p>
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-            <table className="data-table">
-              <thead>
-                <tr><th>User</th><th>Device</th><th>Status</th><th>Last Used</th><th>Actions</th></tr>
-              </thead>
-              <tbody>
-                {devices.map(d => (
-                  <tr key={d._id}>
-                    <td>
-                      <strong>{d.userId?.name || 'Unknown'}</strong><br/>
-                      <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>{d.userId?.username || ''} · {d.userId?.role || ''}</span>
-                    </td>
-                    <td>
-                      <div style={{ fontWeight: 600, fontSize: 14 }}>{d.deviceName || 'Unknown Device'}</div>
-                      <div style={{ fontSize: 11, color: 'var(--gray-400)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.userAgent || ''}</div>
-                    </td>
-                    <td>
-                      {d.isActive ? (
-                        <span className="badge badge-success"><i className="fas fa-check-circle" style={{ fontSize: 8 }}></i> Active</span>
-                      ) : (
-                        <span className="badge badge-warning"><i className="fas fa-ban" style={{ fontSize: 8 }}></i> Deactivated</span>
-                      )}
-                    </td>
-                    <td>{d.lastUsed ? new Date(d.lastUsed).toLocaleString() : '-'}</td>
-                    <td>
-                      {d.isActive ? (
-                        <button className="btn btn-warning" onClick={() => handleDeactivate(d._id)} disabled={actionId === d._id} style={{ width: 'auto', padding: '10px 16px', fontSize: 13 }}>
-                          {actionId === d._id ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-ban"></i>} Deactivate
-                        </button>
-                      ) : (
-                        <button className="btn btn-success" onClick={() => handleActivate(d._id)} disabled={actionId === d._id} style={{ width: 'auto', padding: '10px 16px', fontSize: 13 }}>
-                          {actionId === d._id ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-check"></i>} Activate
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            </div>
-          )}
+          <DeviceTable list={approvedDevices} showDeactivate showActivate />
         </div>
       </div>
+
+      {/* Rejected Devices */}
+      {rejectedDevices.length > 0 && (
+        <div className="card">
+          <div className="card-header">
+            <h3><i className="fas fa-times-circle" style={{ marginRight: 8, color: 'var(--warning)' }}></i>Rejected Devices</h3>
+            <span className="badge badge-gray">{rejectedDevices.length} rejected</span>
+          </div>
+          <div className="card-body" style={{ padding: 0 }}>
+            <DeviceTable list={rejectedDevices} showActivate />
+          </div>
+        </div>
+      )}
 
       <style>{`
         .page-title { font-size: 22px; font-weight: 700; color: var(--gray-900); margin-bottom: 4px; }
         .page-subtitle { font-size: 13px; color: var(--gray-500); margin-bottom: 20px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
         .stat-card { background: white; border-radius: var(--radius); padding: 16px; border: 1px solid var(--gray-100); box-shadow: var(--shadow-sm); transition: all 0.2s; }
         .stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
         .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; font-size: 18px; }
         .stat-icon.blue { background: var(--primary-light); color: var(--primary); }
         .stat-icon.green { background: var(--success-light); color: var(--success); }
         .stat-icon.red { background: var(--warning-light); color: var(--warning); }
+        .stat-icon.orange { background: var(--orange-light); color: var(--orange); }
         .stat-value { font-size: 24px; font-weight: 800; color: var(--gray-900); line-height: 1; }
         .stat-label { font-size: 12px; color: var(--gray-500); margin-top: 4px; font-weight: 500; }
         .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow-sm); border: 1px solid var(--gray-100); overflow: hidden; margin-bottom: 16px; }
@@ -165,6 +231,8 @@ const Devices = () => {
         .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
         .badge-success { background: var(--success-light); color: var(--success); }
         .badge-warning { background: var(--warning-light); color: var(--warning); }
+        .badge-orange { background: var(--orange-light); color: var(--orange); }
+        .badge-blue { background: var(--primary-light); color: var(--primary); }
         .badge-gray { background: var(--gray-100); color: var(--gray-600); }
         .data-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 500px; }
         .data-table th { text-align: left; padding: 12px 16px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 1px solid var(--gray-200); }

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Break Time Tracker — User Guide</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <style>
+    :root {
+      --primary: #1a56db;
+      --primary-dark: #0f2c6d;
+      --primary-light: #e1effe;
+      --success: #0e9f6e;
+      --success-light: #e8f8f0;
+      --warning: #f05252;
+      --warning-light: #fde8e8;
+      --orange: #ff5a1f;
+      --orange-light: #fff4e5;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+      --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-800);
+      line-height: 1.6;
+    }
+    .container { max-width: 960px; margin: 0 auto; padding: 40px 20px; }
+    header {
+      text-align: center;
+      padding: 40px 20px;
+      background: linear-gradient(135deg, #1a56db 0%, #1e429f 50%, #0f2c6d 100%);
+      color: white;
+    }
+    header h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+    header p { font-size: 16px; opacity: 0.85; }
+    header .icon { font-size: 48px; margin-bottom: 16px; }
+    
+    .section { margin-top: 40px; }
+    .section-title {
+      font-size: 22px; font-weight: 700; color: var(--gray-900);
+      margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+    }
+    .section-title i { color: var(--primary); }
+
+    /* Role cards */
+    .roles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .role-card {
+      background: white; border-radius: var(--radius); padding: 24px;
+      border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm);
+      text-align: center; transition: all 0.2s;
+    }
+    .role-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .role-icon { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 24px; }
+    .role-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .role-card p { font-size: 13px; color: var(--gray-500); }
+    .role-operator .role-icon { background: var(--success-light); color: var(--success); }
+    .role-supervisor .role-icon { background: var(--primary-light); color: var(--primary); }
+    .role-admin .role-icon { background: var(--orange-light); color: var(--orange); }
+    .role-tl .role-icon { background: #f3e8ff; color: #7e22ce; }
+
+    /* Flow diagram */
+    .flow-container { background: white; border-radius: var(--radius); padding: 32px; border: 1px solid var(--gray-200); }
+    .flow-step {
+      display: flex; align-items: flex-start; gap: 16px;
+      padding: 20px; border-radius: var(--radius-sm);
+      background: var(--gray-50); border: 1px solid var(--gray-200);
+      margin-bottom: 12px; position: relative;
+    }
+    .flow-step:last-child { margin-bottom: 0; }
+    .flow-number {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--primary); color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; flex-shrink: 0;
+    }
+    .flow-content { flex: 1; }
+    .flow-content h4 { font-size: 15px; font-weight: 700; color: var(--gray-800); margin-bottom: 4px; }
+    .flow-content p { font-size: 13px; color: var(--gray-500); }
+    .flow-arrow {
+      text-align: center; color: var(--gray-300);
+      font-size: 20px; margin: 4px 0;
+    }
+    .flow-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 600; margin-top: 6px;
+    }
+    .badge-operator { background: var(--success-light); color: var(--success); }
+    .badge-approver { background: var(--primary-light); color: var(--primary); }
+    .badge-auto { background: var(--orange-light); color: var(--orange); }
+
+    /* Info boxes */
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .info-card {
+      background: white; border-radius: var(--radius); padding: 24px;
+      border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm);
+    }
+    .info-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .info-card h4 i { color: var(--primary); }
+    .info-card ul { list-style: none; }
+    .info-card li { font-size: 13px; color: var(--gray-500); padding: 6px 0; display: flex; align-items: flex-start; gap: 8px; }
+    .info-card li i { color: var(--success); margin-top: 3px; font-size: 12px; }
+
+    /* Tip box */
+    .tip-box {
+      background: linear-gradient(135deg, var(--primary-light) 0%, #dbeafe 100%);
+      border: 1px solid #bfdbfe; border-radius: var(--radius);
+      padding: 20px 24px; display: flex; align-items: flex-start; gap: 14px;
+    }
+    .tip-box i { font-size: 22px; color: var(--primary); margin-top: 2px; }
+    .tip-box h4 { font-size: 15px; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px; }
+    .tip-box p { font-size: 13px; color: var(--gray-600); }
+
+    /* Screens table */
+    .screens-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .screens-table th { text-align: left; padding: 12px 16px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 1px solid var(--gray-200); background: var(--gray-50); }
+    .screens-table td { padding: 14px 16px; border-bottom: 1px solid var(--gray-100); color: var(--gray-700); }
+    .screens-table tr:hover td { background: var(--gray-50); }
+    .screens-table i { margin-right: 6px; color: var(--primary); }
+
+    footer {
+      text-align: center; padding: 30px; color: var(--gray-400); font-size: 13px;
+      border-top: 1px solid var(--gray-200); margin-top: 40px;
+    }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 24px; }
+      .flow-step { flex-direction: column; gap: 10px; }
+      .container { padding: 20px 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="icon"><i class="fas fa-clock"></i></div>
+  <h1>Break Time Tracker App</h1>
+  <p>QR Code-based Break Time Management System — User Guide</p>
+</header>
+
+<div class="container">
+
+  <!-- Roles Section -->
+  <div class="section">
+    <h2 class="section-title"><i class="fas fa-users"></i> Who Uses This App?</h2>
+    <div class="roles-grid">
+      <div class="role-card role-operator">
+        <div class="role-icon"><i class="fas fa-hard-hat"></i></div>
+        <h3>Operator</h3>
+        <p>Requests breaks via QR scan and returns on time</p>
+      </div>
+      <div class="role-card role-supervisor">
+        <div class="role-icon"><i class="fas fa-user-shield"></i></div>
+        <h3>Supervisor / TL / Coordinator</h3>
+        <p>Reviews and approves break requests from operators</p>
+      </div>
+      <div class="role-card role-admin">
+        <div class="role-icon"><i class="fas fa-user-cog"></i></div>
+        <h3>Admin</h3>
+        <p>Manages users, devices, settings, and views all reports</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- How It Works Flow -->
+  <div class="section">
+    <h2 class="section-title"><i class="fas fa-project-diagram"></i> How the Break Flow Works</h2>
+    <div class="flow-container">
+      
+      <div class="flow-step">
+        <div class="flow-number">1</div>
+        <div class="flow-content">
+          <h4><i class="fas fa-sign-in-alt" style="color:var(--primary)"></i> Login</h4>
+          <p>All users log in with their username and password on a single login screen. Your role determines what features you can access.</p>
+          <span class="flow-badge badge-operator">Operator</span>
+          <span class="flow-badge badge-approver">Approver</span>
+        </div>
+      </div>
+      <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+
+      <div class="flow-step">
+        <div class="flow-number">2</div>
+        <div class="flow-content">
+          <h4><i class="fas fa-paper-plane" style="color:var(--success)"></i> Request a Break</h4>
+          <p>Operator goes to the <strong>Scan</strong> page and taps "Request Break." They scan the QR code placed at the break area (or use the manual button).</p>
+          <span class="flow-badge badge-operator">Operator</span>
+        </div>
+      </div>
+      <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+
+      <div class="flow-step">
+        <div class="flow-number">3</div>
+        <div class="flow-content">
+          <h4><i class="fas fa-user-check" style="color:var(--primary)"></i> Supervisor Approval</h4>
+          <p>Supervisor / Team Leader / Coordinator sees the pending request on their <strong>Dashboard</strong>, sets a duration, and clicks <strong>Approve</strong> or <strong>Reject</strong>.</p>
+          <span class="flow-badge badge-approver">Approver</span>
+        </div>
+      </div>
+      <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+
+      <div class="flow-step">
+        <div class="flow-number">4</div>
+        <div class="flow-content">
+          <h4><i class="fas fa-play-circle" style="color:var(--orange)"></i> Break Starts Automatically</h4>
+          <p>Once approved, the break timer begins. The operator's status changes to "On Break" and a live timer starts counting.</p>
+          <span class="flow-badge badge-auto">Auto</span>
+        </div>
+      </div>
+      <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+
+      <div class="flow-step">
+        <div class="flow-number">5</div>
+        <div class="flow-content">
+          <h4><i class="fas fa-bell" style="color:var(--warning)"></i> 5-Minute Reminder</h4>
+          <p>The app sends a notification 5 minutes before the break ends so the operator knows it's time to head back.</p>
+          <span class="flow-badge badge-auto">Auto</span>
+        </div>
+      </div>
+      <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+
+      <div class="flow-step">
+        <div class="flow-number">6</div>
+        <div class="flow-content">
+          <h4><i class="fas fa-stop-circle" style="color:var(--success)"></i> Return & End Break</h4>
+          <p>Operator scans the QR code again (or taps "End Break") to mark their return. The system records the exact duration and marks the break as completed.</p>
+          <span class="flow-badge badge-operator">Operator</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Tips -->
+  <div class="section">
+    <div class="tip-box">
+      <i class="fas fa-lightbulb"></i>
+      <div>
+        <h4>Pro Tip</h4>
+        <p>Operators can also request and end breaks directly from the <strong>Dashboard</strong> without scanning a QR code. The QR code is just the fastest way!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screens Overview -->
+  <div class="section">
+    <h2 class="section-title"><i class="fas fa-desktop"></i> App Screens Overview</h2>
+    <div style="overflow-x:auto;">
+      <table class="screens-table">
+        <thead>
+          <tr><th>Screen</th><th>What You Can Do</th><th>Who Can Access</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><i class="fas fa-home"></i> <strong>Dashboard</strong></td><td>View break status, request/end breaks, approve pending requests, see live staffing stats</td><td>Everyone</td></tr>
+          <tr><td><i class="fas fa-qrcode"></i> <strong>Scan</strong></td><td>Scan QR codes to request or end breaks quickly</td><td>Everyone</td></tr>
+          <tr><td><i class="fas fa-history"></i> <strong>History</strong></td><td>View your personal break history for today</td><td>Everyone</td></tr>
+          <tr><td><i class="fas fa-chart-bar"></i> <strong>Reports</strong></td><td>See daily break statistics, late returns, and staff summaries</td><td>Everyone</td></tr>
+          <tr><td><i class="fas fa-users-cog"></i> <strong>Users</strong></td><td>Add, edit, or remove team members</td><td>Admin, Supervisor</td></tr>
+          <tr><td><i class="fas fa-mobile-alt"></i> <strong>Devices</strong></td><td>Manage registered devices and access control</td><td>Admin, Supervisor</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Key Features -->
+  <div class="section">
+    <h2 class="section-title"><i class="fas fa-star"></i> Key Features</h2>
+    <div class="info-grid">
+      <div class="info-card">
+        <h4><i class="fas fa-qrcode"></i> QR Code Scanning</h4>
+        <ul>
+          <li><i class="fas fa-check-circle"></i> Place a QR code at the break area</li>
+          <li><i class="fas fa-check-circle"></i> Operators scan to request or end breaks</li>
+          <li><i class="fas fa-check-circle"></i> No typing needed — just point and scan</li>
+        </ul>
+      </div>
+      <div class="info-card">
+        <h4><i class="fas fa-shield-alt"></i> Role-Based Access</h4>
+        <ul>
+          <li><i class="fas fa-check-circle"></i> One login page for all roles</li>
+          <li><i class="fas fa-check-circle"></i> Operators can't approve breaks</li>
+          <li><i class="fas fa-check-circle"></i> Admins manage everything</li>
+        </ul>
+      </div>
+      <div class="info-card">
+        <h4><i class="fas fa-bell"></i> Smart Reminders</h4>
+        <ul>
+          <li><i class="fas fa-check-circle"></i> 5-minute warning before break ends</li>
+          <li><i class="fas fa-check-circle"></i> Late return alerts</li>
+          <li><i class="fas fa-check-circle"></i> Real-time status updates</li>
+        </ul>
+      </div>
+      <div class="info-card">
+        <h4><i class="fas fa-chart-pie"></i> Reports & Analytics</h4>
+        <ul>
+          <li><i class="fas fa-check-circle"></i> Daily break statistics</li>
+          <li><i class="fas fa-check-circle"></i> Track late returns</li>
+          <li><i class="fas fa-check-circle"></i> Staff availability overview</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Default Login -->
+  <div class="section">
+    <div class="tip-box" style="background: linear-gradient(135deg, var(--success-light) 0%, #e8f8f0 100%); border-color: #a7f3d0;">
+      <i class="fas fa-key" style="color: var(--success);"></i>
+      <div>
+        <h4 style="color: var(--success);">Default Admin Login</h4>
+        <p><strong>Username:</strong> <code>admin</code> &nbsp;|&nbsp; <strong>Password:</strong> <code>Admin123</code><br>Use this to log in for the first time and create other users.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <i class="fas fa-clock" style="margin-right: 6px;"></i> Break Time Tracker App — User Guide
+</footer>
+
+</body>
+</html>

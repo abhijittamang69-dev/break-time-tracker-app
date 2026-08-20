@@ -14,7 +14,8 @@ const SettingsModal = ({ isAdmin, onClose }) => {
     maxBreaksPerShift: 3,
     defaultBreakDuration: 15,
     reminderMinutesBeforeEnd: 5,
-    lateThresholdMinutes: 30
+    lateThresholdMinutes: 30,
+    qrCodeValue: 'BREAK_TIME_QR_2024'
   });
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('password');
@@ -26,7 +27,7 @@ const SettingsModal = ({ isAdmin, onClose }) => {
   const fetchSettings = async () => {
     try {
       const res = await getSettings();
-      setSettings(res.data);
+      setSettings(prev => ({ ...prev, ...res.data }));
     } catch (err) { console.error(err); }
   };
 
@@ -64,6 +65,11 @@ const SettingsModal = ({ isAdmin, onClose }) => {
     } finally { setSettingsLoading(false); }
   };
 
+  const regenerateQR = () => {
+    const newValue = 'BREAK_QR_' + Math.random().toString(36).substring(2, 10).toUpperCase();
+    setSettings(prev => ({ ...prev, qrCodeValue: newValue }));
+  };
+
   return (
     <div className="modal-overlay active" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal animate-slide-up">
@@ -80,11 +86,16 @@ const SettingsModal = ({ isAdmin, onClose }) => {
               <i className="fas fa-sliders-h"></i> System
             </button>
           )}
+          {isAdmin && (
+            <button className={`modal-tab ${activeTab === 'qr' ? 'active' : ''}`} onClick={() => { setActiveTab('qr'); setMessage(''); setError(''); }}>
+              <i className="fas fa-qrcode"></i> QR
+            </button>
+          )}
         </div>
         {message && <div className="alert alert-success" style={{ margin: '16px 24px 0' }}><i className="fas fa-check-circle"></i> {message}</div>}
         {error && <div className="alert alert-warning" style={{ margin: '16px 24px 0' }}><i className="fas fa-exclamation-circle"></i> {error}</div>}
 
-        {activeTab === 'password' ? (
+        {activeTab === 'password' && (
           <form onSubmit={handlePasswordSubmit}>
             <div className="modal-body">
               <div className="form-group">
@@ -116,7 +127,9 @@ const SettingsModal = ({ isAdmin, onClose }) => {
               </button>
             </div>
           </form>
-        ) : (
+        )}
+
+        {activeTab === 'system' && (
           <div>
             <div className="modal-body">
               <div className="form-group">
@@ -145,6 +158,36 @@ const SettingsModal = ({ isAdmin, onClose }) => {
               <button type="button" className="btn btn-primary" onClick={handleSettingsSave} disabled={settingsLoading} style={{ width: 'auto', padding: '10px 20px' }}>
                 {settingsLoading ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-save"></i>} Save Settings
               </button>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'qr' && (
+          <div>
+            <div className="modal-body" style={{ textAlign: 'center' }}>
+              <div className="form-group" style={{ textAlign: 'left' }}>
+                <label>QR Code Value</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input type="text" value={settings.qrCodeValue} readOnly style={{ ...inputStyle, flex: 1, background: 'var(--gray-100)' }} />
+                  <button type="button" className="btn btn-primary" onClick={regenerateQR} style={{ width: 'auto', padding: '10px 16px' }}>
+                    <i className="fas fa-sync-alt"></i> Regenerate
+                  </button>
+                </div>
+              </div>
+              <div style={{ padding: 20, background: 'var(--gray-50)', borderRadius: 12, border: '2px dashed var(--gray-300)', marginBottom: 16 }}>
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(settings.qrCodeValue)}`}
+                  alt="Break QR Code"
+                  style={{ width: 200, height: 200 }}
+                />
+                <div style={{ fontSize: 12, color: 'var(--gray-500)', marginTop: 8 }}>Scan this QR code to request a break</div>
+              </div>
+              <button type="button" className="btn btn-primary" onClick={handleSettingsSave} disabled={settingsLoading} style={{ width: 'auto', padding: '10px 20px' }}>
+                {settingsLoading ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-save"></i>} Save QR Code
+              </button>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={onClose} style={{ width: 'auto', padding: '10px 20px' }}>Close</button>
             </div>
           </div>
         )}

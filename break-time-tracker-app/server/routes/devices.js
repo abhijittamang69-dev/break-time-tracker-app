@@ -25,7 +25,7 @@ router.get('/all', auth, isAdmin, async (req, res) => {
   try {
     const devices = await Device.find()
       .populate('userId', 'name username role')
-      .sort({ lastUsed: -1 });
+      .sort({ createdAt: -1 });
     res.json(devices);
   } catch (error) {
     console.error('Get all devices error:', error);
@@ -52,19 +52,19 @@ router.post('/register', auth, async (req, res) => {
       device.deviceName = deviceName || device.deviceName;
       device.userAgent = userAgent || device.userAgent;
       device.lastUsed = new Date();
-      device.isActive = true;
       await device.save();
       return res.json({ message: 'Device registered successfully', device });
     }
 
-    // Create new device
+    // Create new device as pending
     device = new Device({
       userId: req.user._id,
       deviceToken,
       deviceName: deviceName || 'Unknown Device',
       userAgent: userAgent || req.headers['user-agent'] || '',
       lastUsed: new Date(),
-      isActive: true
+      status: 'pending',
+      isActive: false
     });
 
     await device.save();
@@ -75,8 +75,48 @@ router.post('/register', auth, async (req, res) => {
   }
 });
 
+// @route   POST /api/devices/approve/:id
+// @desc    Approve a pending device (admin only)
+// @access  Private (Admin only)
+router.post('/approve/:id', auth, isAdmin, async (req, res) => {
+  try {
+    const device = await Device.findById(req.params.id);
+    if (!device) {
+      return res.status(404).json({ message: 'Device not found' });
+    }
+
+    device.status = 'approved';
+    device.isActive = true;
+    await device.save();
+    res.json({ message: 'Device approved successfully' });
+  } catch (error) {
+    console.error('Approve device error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   POST /api/devices/reject/:id
+// @desc    Reject a pending device (admin only)
+// @access  Private (Admin only)
+router.post('/reject/:id', auth, isAdmin, async (req, res) => {
+  try {
+    const device = await Device.findById(req.params.id);
+    if (!device) {
+      return res.status(404).json({ message: 'Device not found' });
+    }
+
+    device.status = 'rejected';
+    device.isActive = false;
+    await device.save();
+    res.json({ message: 'Device rejected successfully' });
+  } catch (error) {
+    console.error('Reject device error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // @route   POST /api/devices/deactivate/:id
-// @desc    Deactivate a device (admin only)
+// @desc    Deactivate an approved device (admin only)
 // @access  Private (Admin only)
 router.post('/deactivate/:id', auth, isAdmin, async (req, res) => {
   try {
@@ -95,7 +135,7 @@ router.post('/deactivate/:id', auth, isAdmin, async (req, res) => {
 });
 
 // @route   POST /api/devices/activate/:id
-// @desc    Activate a device (admin only)
+// @desc    Reactivate a deactivated device (admin only)
 // @access  Private (Admin only)
 router.post('/activate/:id', auth, isAdmin, async (req, res) => {
   try {
@@ -104,6 +144,9 @@ router.post('/activate/:id', auth, isAdmin, async (req, res) => {
       return res.status(404).json({ message: 'Device not found' });
     }
 
+    if (device.status === 'rejected') {
+      device.status = 'approved';
+    }
     device.isActive = true;
     await device.save();
     res.json({ message: 'Device activated successfully' });

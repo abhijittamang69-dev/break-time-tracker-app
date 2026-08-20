@@ -19,37 +19,59 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Check if device token is provided and valid
-    if (deviceToken) {
-      const Device = require('../models/Device');
-      let device = await Device.findOne({ deviceToken });
+    // Device is required for all users
+    if (!deviceToken) {
+      return res.status(403).json({
+        message: 'DEVICE_REQUIRED',
+        description: 'Device token is required. Please enable device registration.'
+      });
+    }
 
-      if (device) {
-        // Device exists - check if active and belongs to user
-        if (!device.isActive) {
-          return res.status(403).json({
-            message: 'DEVICE_DEACTIVATED',
-            description: 'This device has been deactivated. Please contact your supervisor.'
-          });
-        }
-        // Update device info
-        device.userId = user._id;
-        device.lastUsed = new Date();
-        if (deviceName) device.deviceName = deviceName;
-        if (userAgent) device.userAgent = userAgent;
-        await device.save();
-      } else {
-        // New device - auto-register on first login
-        device = new Device({
-          userId: user._id,
-          deviceToken,
-          deviceName: deviceName || 'Unknown Device',
-          userAgent: userAgent || '',
-          lastUsed: new Date(),
-          isActive: true
+    const Device = require('../models/Device');
+    let device = await Device.findOne({ deviceToken });
+
+    if (device) {
+      // Device exists - check status
+      if (device.status === 'pending') {
+        return res.status(403).json({
+          message: 'DEVICE_PENDING',
+          description: 'Your device is pending admin approval. Please contact your administrator.'
         });
-        await device.save();
       }
+      if (device.status === 'rejected') {
+        return res.status(403).json({
+          message: 'DEVICE_REJECTED',
+          description: 'Your device has been rejected. Please contact your administrator.'
+        });
+      }
+      if (device.status === 'approved' && !device.isActive) {
+        return res.status(403).json({
+          message: 'DEVICE_DEACTIVATED',
+          description: 'This device has been deactivated. Please contact your administrator.'
+        });
+      }
+      // Approved and active - update info and allow login
+      device.userId = user._id;
+      device.lastUsed = new Date();
+      if (deviceName) device.deviceName = deviceName;
+      if (userAgent) device.userAgent = userAgent;
+      await device.save();
+    } else {
+      // New device - create as pending, block login
+      device = new Device({
+        userId: user._id,
+        deviceToken,
+        deviceName: deviceName || 'Unknown Device',
+        userAgent: userAgent || '',
+        lastUsed: new Date(),
+        status: 'pending',
+        isActive: false
+      });
+      await device.save();
+      return res.status(403).json({
+        message: 'DEVICE_PENDING',
+        description: 'This is a new device. It has been registered and is pending admin approval. Please contact your administrator.'
+      });
     }
 
     const token = generateToken(user._id);

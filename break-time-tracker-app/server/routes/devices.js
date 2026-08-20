@@ -113,10 +113,14 @@ router.post('/approve/:id', auth, isAdmin, async (req, res) => {
     }
 
     // Deactivate all other approved devices for this user (one device per user)
-    await Device.updateMany(
-      { userId: device.userId, _id: { $ne: device._id }, status: 'approved' },
-      { $set: { isActive: false } }
-    );
+    // Skip for admin users - they can have multiple active devices
+    const deviceOwner = await User.findById(device.userId);
+    if (deviceOwner && deviceOwner.role !== 'Admin') {
+      await Device.updateMany(
+        { userId: device.userId, _id: { $ne: device._id }, status: 'approved' },
+        { $set: { isActive: false } }
+      );
+    }
 
     device.status = 'approved';
     device.isActive = true;

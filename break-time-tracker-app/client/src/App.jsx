@@ -8,17 +8,9 @@ import History from './pages/History';
 import Reports from './pages/Reports';
 import Users from './pages/Users';
 import Devices from './pages/Devices';
-import DeviceAccessDenied from './components/DeviceAccessDenied';
-import storage from './utils/storage';
 
 function App() {
   const { user, loading } = useAuth();
-
-  // Check if device access is restricted
-  const deviceError = storage.get('deviceError');
-  if (deviceError) {
-    return <DeviceAccessDenied />;
-  }
 
   if (loading) {
     return (

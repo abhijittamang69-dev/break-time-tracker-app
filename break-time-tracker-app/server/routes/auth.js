@@ -47,7 +47,13 @@ router.post('/login', async (req, res) => {
         if (userAgent) device.userAgent = userAgent;
         await device.save();
       } else {
-        // Non-admin - check status
+        // Non-admin - check ownership and status
+        if (device.userId && device.userId.toString() !== user._id.toString()) {
+          return res.status(403).json({
+            message: 'DEVICE_UNAUTHORIZED',
+            description: 'Unauthorized device. Please contact your administrator.'
+          });
+        }
         if (device.status === 'pending') {
           return res.status(403).json({
             message: 'DEVICE_UNAUTHORIZED',

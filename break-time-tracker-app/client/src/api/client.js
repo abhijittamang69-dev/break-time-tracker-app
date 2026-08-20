@@ -30,10 +30,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       storage.remove('token');
       storage.remove('user');
-      // Use window.location for full page reload to clear React state
-      if (window.location.pathname !== '/') {
-        window.location.href = '/';
-      }
+      window.location.reload();
     }
     return Promise.reject(error);
   }

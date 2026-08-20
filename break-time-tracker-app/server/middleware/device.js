@@ -16,10 +16,16 @@ const deviceAuth = async (req, res, next) => {
       });
     }
 
-    // Check if device exists and is active
+    // Admin bypass - no device restriction
+    if (req.user.role === 'Admin') {
+      return next();
+    }
+
+    // Check if device exists, is approved, and is active
     const device = await Device.findOne({
       userId: req.user._id,
       deviceToken: deviceToken,
+      status: 'approved',
       isActive: true
     });
 

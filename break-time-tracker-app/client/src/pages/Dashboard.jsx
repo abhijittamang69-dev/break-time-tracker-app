@@ -267,7 +267,7 @@ const Dashboard = () => {
               </div>
               <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
                 <MiniStat value={breaksTaken} label="Breaks Taken" />
-                <MiniStat value={remainingMinutes} label="Minutes Left" />
+                <MiniStat value={modeDefaultDuration} label="Minutes Left" />
                 <MiniStat value={modeMaxBreaks - breaksTaken} label="Breaks Left" />
               </div>
               {canRequestBreak ? (

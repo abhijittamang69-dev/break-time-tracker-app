@@ -11,9 +11,11 @@ const Scan = () => {
   const [toast, setToast] = useState(null);
   const [myActiveBreak, setMyActiveBreak] = useState(null);
   const [myPendingBreak, setMyPendingBreak] = useState(null);
+  const [myMode, setMyMode] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
 
   const isOperator = user?.role === 'Operator';
+  const isManualLocked = myMode === 'manual';
 
   const checkBreakStatus = useCallback(async () => {
     try {
@@ -21,6 +23,7 @@ const Scan = () => {
       const myBreaks = res.data.filter(b => b.userId === user?.id || b.userId?._id === user?.id);
       setMyActiveBreak(myBreaks.find(b => b.status === 'active') || null);
       setMyPendingBreak(myBreaks.find(b => b.status === 'pending') || null);
+      setMyMode(myBreaks.length > 0 ? myBreaks[0].mode : null);
     } catch (err) { console.error(err); }
   }, [user]);
 
@@ -58,7 +61,7 @@ const Scan = () => {
         const res = await getTodayBreaks();
         const myBreaks = res.data.filter(b => b.userId === user?.id || b.userId?._id === user?.id);
         const completed = myBreaks.filter(b => b.status === 'completed' || b.status === 'late');
-        await requestBreak(completed.length + 1);
+        await requestBreak(completed.length + 1, 60, 'qr');
         showToast('Break requested! Waiting for supervisor approval.', 'success');
       } else if (!isOperator && !myActiveBreak) {
         showToast('Only Operators can request breaks. Use Dashboard to approve requests.', 'info');
@@ -77,6 +80,16 @@ const Scan = () => {
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       <h1 className="page-title">QR Code Scanner</h1>
       <p className="page-subtitle">Scan to request or end your break</p>
+
+      {/* Mode lock warning */}
+      {isManualLocked && (
+        <div style={{ padding: 16, background: 'var(--warning-light)', borderRadius: 12, border: '2px dashed var(--warning)', marginBottom: 16, textAlign: 'center' }}>
+          <i className="fas fa-lock" style={{ fontSize: 24, color: 'var(--warning)', marginBottom: 8 }}></i>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--warning)' }}>Manual Mode Active</div>
+          <div style={{ fontSize: 13, color: 'var(--gray-600)', marginTop: 4 }}>You are using Manual mode this shift. QR Code requests are not available.</div>
+        </div>
+      )}
+
       <div className="card">
         <div className="card-body" style={{ textAlign: 'center' }}>
           {scanning ? (
@@ -90,7 +103,7 @@ const Scan = () => {
                 <i className="fas fa-qrcode" style={{ fontSize: 64, color: 'var(--gray-400)' }}></i>
               </div>
               <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--gray-700)', marginBottom: 4 }}>Break Area QR Code</div>
-              <div style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 20 }}>Place this QR at the designated break area</div>
+              <div style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 20 }}>QR Mode: 60 min · Up to 4 breaks per shift</div>
 
               {myActiveBreak ? (
                 <button className="scan-btn" onClick={startScanner} disabled={actionLoading} style={{ borderColor: 'var(--warning)', background: 'var(--warning-light)', color: 'var(--warning)' }}>
@@ -104,11 +117,17 @@ const Scan = () => {
                   <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--primary)', marginBottom: 4 }}>Break Request Pending</div>
                   <div style={{ fontSize: 13, color: 'var(--gray-600)' }}>Waiting for supervisor approval...</div>
                 </div>
+              ) : isManualLocked ? (
+                <div style={{ padding: 20, background: 'var(--gray-100)', borderRadius: 12, border: '2px dashed var(--gray-300)' }}>
+                  <i className="fas fa-ban" style={{ fontSize: 32, color: 'var(--gray-400)', marginBottom: 12 }}></i>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 4 }}>QR Not Available</div>
+                  <div style={{ fontSize: 13, color: 'var(--gray-500)' }}>You are locked into Manual mode this shift.</div>
+                </div>
               ) : (
                 <button className="scan-btn" onClick={startScanner} disabled={actionLoading}>
                   <i className="fas fa-paper-plane"></i>
                   <span>{isOperator ? 'Request Break' : 'Scan QR'}</span>
-                  <span style={{ fontSize: 12, fontWeight: 400, opacity: 0.7 }}>{isOperator ? 'Tap to request break approval' : 'Supervisors use Dashboard to approve'}</span>
+                  <span style={{ fontSize: 12, fontWeight: 400, opacity: 0.7 }}>{isOperator ? 'Tap to request break approval (60 min)' : 'Supervisors use Dashboard to approve'}</span>
                 </button>
               )}
 
@@ -117,7 +136,7 @@ const Scan = () => {
                 <button className="btn btn-warning" onClick={handleBreakAction} disabled={actionLoading} style={{ marginTop: 12 }}>
                   {actionLoading ? <i className="fas fa-circle-notch fa-spin"></i> : <><i className="fas fa-stop-circle"></i> End Break (Manual)</>}
                 </button>
-              ) : !myPendingBreak && isOperator ? (
+              ) : !myPendingBreak && isOperator && !isManualLocked ? (
                 <button className="btn btn-success" onClick={handleBreakAction} disabled={actionLoading} style={{ marginTop: 12 }}>
                   {actionLoading ? <i className="fas fa-circle-notch fa-spin"></i> : <><i className="fas fa-paper-plane"></i> Request Break (Manual)</>}
                 </button>
@@ -131,7 +150,7 @@ const Scan = () => {
         <div className="card-body">
           <div className="break-list">
             {[
-              { icon: 'fa-paper-plane', title: 'Request Break', desc: 'Operator scans QR to request a break' },
+              { icon: 'fa-paper-plane', title: 'Request Break', desc: 'Operator scans QR to request a break (60 min, max 4 per shift)' },
               { icon: 'fa-user-check', title: 'Supervisor Approval', desc: 'Supervisor/Team Leader/Coordinator reviews and approves' },
               { icon: 'fa-play-circle', title: 'Break Starts', desc: 'Once approved, break timer begins automatically' },
               { icon: 'fa-bell', title: '5-Min Reminder', desc: 'Operator gets notified 5 minutes before break ends' },
@@ -157,7 +176,7 @@ const Scan = () => {
         .card-body { padding: 20px; }
         .scan-btn { width: 100%; padding: 20px; border: 3px dashed var(--primary); border-radius: var(--radius); background: var(--primary-light); color: var(--primary); font-size: 16px; font-weight: 700; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: all 0.2s; font-family: inherit; }
         .scan-btn:hover:not(:disabled) { background: #d4e6fc; transform: scale(1.02); }
-        .scan-btn i { font-size: 32px; }
+        .scan-btn i { fontSize: 32px; }
         .scan-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .btn { padding: 14px; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-success { background: var(--success); color: white; }

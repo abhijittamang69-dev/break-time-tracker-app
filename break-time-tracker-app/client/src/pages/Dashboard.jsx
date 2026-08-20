@@ -45,11 +45,21 @@ const Dashboard = () => {
   const myCompleted = myBreaks.filter(b => b.status === 'completed' || b.status === 'late');
   const myActive = myBreaks.find(b => b.status === 'active');
   const myPending = myBreaks.find(b => b.status === 'pending');
+
+  // Determine current mode and apply mode-specific limits
+  const currentMode = myBreaks.length > 0 ? myBreaks[0].mode : null;
+  const isQrLocked = currentMode === 'qr';
+  const isManualMode = !isQrLocked; // default/manual mode
+
+  const modeMaxBreaks = isQrLocked ? 4 : 3;
+  const modeDefaultDuration = isQrLocked ? 60 : 45;
+  const modeMaxMinutes = isQrLocked ? 240 : 135; // 4x60 or 3x45
+
   const myTotalUsed = myCompleted.reduce((sum, b) => sum + (b.duration || 0), 0);
-  const remainingMinutes = Math.max(0, settings.maxBreakMinutes - Math.floor(myTotalUsed / 60));
-  const usedPercent = Math.min(100, (myTotalUsed / (settings.maxBreakMinutes * 60)) * 100);
+  const remainingMinutes = Math.max(0, modeMaxMinutes - Math.floor(myTotalUsed / 60));
+  const usedPercent = Math.min(100, (myTotalUsed / (modeMaxMinutes * 60)) * 100);
   const breaksTaken = myCompleted.length;
-  const canRequestBreak = breaksTaken < settings.maxBreaksPerShift && remainingMinutes > 0 && !myActive && !myPending;
+  const canRequestBreak = !isQrLocked && breaksTaken < modeMaxBreaks && remainingMinutes > 0 && !myActive && !myPending;
 
   // Live timer for active break + 5-min reminder
   useEffect(() => {
@@ -80,7 +90,7 @@ const Dashboard = () => {
   const handleRequestBreak = async () => {
     setActionLoading(true);
     try {
-      await requestBreak(breaksTaken + 1, settings.defaultBreakDuration);
+      await requestBreak(breaksTaken + 1, modeDefaultDuration, 'manual');
       showToast('Break requested! Waiting for supervisor approval.', 'success');
       fetchData();
     } catch (err) {
@@ -234,14 +244,24 @@ const Dashboard = () => {
             </>
           ) : (
             <>
+              {/* Mode lock warning for QR users */}
+              {isQrLocked && (
+                <div style={{ padding: 14, background: 'var(--warning-light)', borderRadius: 8, border: '1px solid #fbd5d5', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <i className="fas fa-lock" style={{ color: 'var(--warning)' }}></i>
+                  <span style={{ fontSize: 13, color: 'var(--warning)', fontWeight: 600 }}>
+                    You are using QR Code mode this shift. Please use the Scan page to request breaks.
+                  </span>
+                </div>
+              )}
+
               <div className="progress-container">
-                <div className="progress-header"><span>Break Time Used</span><span>{fmtDur(myTotalUsed)} / {settings.maxBreakMinutes} min</span></div>
+                <div className="progress-header"><span>Break Time Used</span><span>{fmtDur(myTotalUsed)} / {modeMaxMinutes} min</span></div>
                 <div className="progress-bar"><div className={`progress-fill ${usedPercent > 80 ? 'red' : usedPercent > 50 ? 'orange' : 'green'}`} style={{ width: `${usedPercent}%` }}></div></div>
               </div>
               <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
                 <MiniStat value={breaksTaken} label="Breaks Taken" />
                 <MiniStat value={remainingMinutes} label="Minutes Left" />
-                <MiniStat value={settings.maxBreaksPerShift - breaksTaken} label="Breaks Left" />
+                <MiniStat value={modeMaxBreaks - breaksTaken} label="Breaks Left" />
               </div>
               {canRequestBreak ? (
                 <button className="btn btn-success" onClick={handleRequestBreak} disabled={actionLoading}>
@@ -250,7 +270,7 @@ const Dashboard = () => {
               ) : (
                 <div className="alert alert-warning">
                   <i className="fas fa-exclamation-circle"></i>
-                  {myPending ? ' Your break request is pending approval.' : remainingMinutes <= 0 ? ' You have used all your break time.' : ' Maximum breaks reached.'}
+                  {myPending ? ' Your break request is pending approval.' : isQrLocked ? ' You are using QR Code mode this shift.' : remainingMinutes <= 0 ? ' You have used all your break time.' : ' Maximum breaks reached.'}
                 </div>
               )}
             </>
@@ -283,7 +303,7 @@ const Dashboard = () => {
                           type="number"
                           min="1"
                           max="60"
-                          defaultValue={b.approvedDuration || settings.defaultBreakDuration}
+                          defaultValue={b.approvedDuration || modeDefaultDuration}
                           onChange={(e) => setApproveDuration({ ...approveDuration, [b._id]: e.target.value })}
                           style={{ width: 60, padding: '6px 8px', border: '1px solid var(--gray-200)', borderRadius: 6, fontSize: 13 }}
                         /> min

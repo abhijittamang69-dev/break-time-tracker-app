@@ -67,6 +67,11 @@ const breakSchema = new mongoose.Schema({
   approvedDuration: {
     type: Number,
     default: null
+  },
+  mode: {
+    type: String,
+    enum: ['qr', 'manual'],
+    default: 'manual'
   }
 });
 

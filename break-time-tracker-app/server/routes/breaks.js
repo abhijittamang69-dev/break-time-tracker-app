@@ -71,7 +71,7 @@ router.get('/pending', auth, async (req, res) => {
 
 router.post('/request', auth, async (req, res) => {
   try {
-    const { breakNumber, requestedDuration } = req.body;
+    const { breakNumber, requestedDuration, mode } = req.body;
     const userId = req.user._id;
     const { start, end } = getTodayRange();
 
@@ -89,8 +89,27 @@ router.post('/request', auth, async (req, res) => {
       });
     }
 
-    let settings = await Setting.findOne();
-    if (!settings) settings = await Setting.create({});
+    // Check if user already has breaks today and enforce same mode
+    const allTodayBreaks = await Break.find({
+      userId: userId,
+      date: { $gte: start, $lt: end }
+    });
+
+    if (allTodayBreaks.length > 0) {
+      const existingMode = allTodayBreaks[0].mode;
+      if (mode && mode !== existingMode) {
+        const modeLabel = existingMode === 'qr' ? 'QR Code' : 'Manual';
+        return res.status(400).json({
+          message: `You are already using ${modeLabel} mode this shift. You can only use one option per shift.`
+        });
+      }
+    }
+
+    // Mode-specific limits
+    const isQr = mode === 'qr';
+    const maxBreaks = isQr ? 4 : 3;
+    const defaultDuration = isQr ? 60 : 45;
+    const maxTotalMinutes = isQr ? 240 : 135; // 4 x 60 or 3 x 45
 
     const todayBreaks = await Break.find({
       userId: userId,
@@ -98,13 +117,13 @@ router.post('/request', auth, async (req, res) => {
       status: { $in: ['active', 'completed', 'late'] }
     });
 
-    if (todayBreaks.length >= settings.maxBreaksPerShift) {
-      return res.status(400).json({ message: 'Maximum breaks reached for this shift' });
+    if (todayBreaks.length >= maxBreaks) {
+      return res.status(400).json({ message: `Maximum ${maxBreaks} breaks reached for this shift` });
     }
 
     const totalUsed = todayBreaks.reduce((sum, b) => sum + (b.duration || 0), 0);
-    if (totalUsed >= settings.maxBreakMinutes * 60) {
-      return res.status(400).json({ message: 'No break time remaining' });
+    if (totalUsed >= maxTotalMinutes * 60) {
+      return res.status(400).json({ message: 'No break time remaining for this shift' });
     }
 
     const now = new Date();
@@ -117,7 +136,8 @@ router.post('/request', auth, async (req, res) => {
       date: now,
       status: 'pending',
       requestedAt: now,
-      approvedDuration: requestedDuration || settings.defaultBreakDuration
+      approvedDuration: requestedDuration || defaultDuration,
+      mode: mode || 'manual'
     });
 
     await newBreak.save();

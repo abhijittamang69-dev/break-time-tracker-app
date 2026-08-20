@@ -52,8 +52,6 @@ const Dashboard = () => {
   const modeMaxBreaks = isQrLocked ? 4 : 3;
   const modeDefaultDuration = 15; // each break is 15 minutes
   const modeMaxMinutes = isQrLocked ? 60 : 45; // 4x15 or 3x15 total shift minutes
-  const modeDefaultDuration = isQrLocked ? 60 : 45;
-  const modeMaxMinutes = isQrLocked ? 240 : 135; // 4x60 or 3x45
 
   const myTotalUsed = myCompleted.reduce((sum, b) => sum + (b.duration || 0), 0);
   const remainingMinutes = Math.max(0, modeMaxMinutes - Math.floor(myTotalUsed / 60));

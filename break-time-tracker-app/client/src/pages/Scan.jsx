@@ -61,7 +61,7 @@ const Scan = () => {
         const res = await getTodayBreaks();
         const myBreaks = res.data.filter(b => b.userId === user?.id || b.userId?._id === user?.id);
         const completed = myBreaks.filter(b => b.status === 'completed' || b.status === 'late');
-        await requestBreak(completed.length + 1, 60, 'qr');
+        await requestBreak(completed.length + 1, 15, 'qr');
         showToast('Break requested! Waiting for supervisor approval.', 'success');
       } else if (!isOperator && !myActiveBreak) {
         showToast('Only Operators can request breaks. Use Dashboard to approve requests.', 'info');

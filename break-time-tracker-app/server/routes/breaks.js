@@ -110,10 +110,6 @@ router.post('/request', auth, async (req, res) => {
     const maxBreaks = isQr ? 4 : 3;
     const defaultDuration = 15;
     const maxTotalMinutes = isQr ? 60 : 45; // 4 x 15 or 3 x 15
-    const isQr = mode === 'qr';
-    const maxBreaks = isQr ? 4 : 3;
-    const defaultDuration = isQr ? 60 : 45;
-    const maxTotalMinutes = isQr ? 240 : 135; // 4 x 60 or 3 x 45
 
     const todayBreaks = await Break.find({
       userId: userId,
@@ -165,7 +161,6 @@ router.post('/approve/:id', auth, isApprover, async (req, res) => {
 
     // Fixed duration - every break is 15 minutes
     const fixedDuration = 15;
-    const fixedDuration = breakRecord.mode === 'qr' ? 60 : 45;
 
     breakRecord.status = 'active';
     breakRecord.startTime = new Date();

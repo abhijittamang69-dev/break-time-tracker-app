@@ -150,7 +150,6 @@ router.post('/request', auth, async (req, res) => {
 
 router.post('/approve/:id', auth, isApprover, async (req, res) => {
   try {
-    const { approvedDuration } = req.body;
     const breakRecord = await Break.findById(req.params.id);
 
     if (!breakRecord) {
@@ -160,17 +159,15 @@ router.post('/approve/:id', auth, isApprover, async (req, res) => {
       return res.status(400).json({ message: 'Break request is not pending' });
     }
 
-    let settings = await Setting.findOne();
-    if (!settings) settings = await Setting.create({});
-
-    const duration = approvedDuration || breakRecord.approvedDuration || settings.defaultBreakDuration;
+    // Fixed duration based on mode - QR = 60 min, Manual = 45 min
+    const fixedDuration = breakRecord.mode === 'qr' ? 60 : 45;
 
     breakRecord.status = 'active';
     breakRecord.startTime = new Date();
     breakRecord.approvedBy = req.user._id;
     breakRecord.approvedByName = req.user.name;
     breakRecord.approvedAt = new Date();
-    breakRecord.approvedDuration = duration;
+    breakRecord.approvedDuration = fixedDuration;
 
     await breakRecord.save();
     res.json(breakRecord);

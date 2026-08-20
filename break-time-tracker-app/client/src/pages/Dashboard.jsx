@@ -17,7 +17,6 @@ const Dashboard = () => {
   const [approvingId, setApprovingId] = useState(null);
   const [liveTimer, setLiveTimer] = useState('00:00:00');
   const [reminderShown, setReminderShown] = useState(false);
-  const [approveDuration, setApproveDuration] = useState({});
 
   const isApprover = ['Supervisor', 'Team Leader', 'Coordinator', 'Admin'].includes(user?.role);
   const isOperator = user?.role === 'Operator';
@@ -49,7 +48,6 @@ const Dashboard = () => {
   // Determine current mode and apply mode-specific limits
   const currentMode = myBreaks.length > 0 ? myBreaks[0].mode : null;
   const isQrLocked = currentMode === 'qr';
-  const isManualMode = !isQrLocked; // default/manual mode
 
   const modeMaxBreaks = isQrLocked ? 4 : 3;
   const modeDefaultDuration = isQrLocked ? 60 : 45;
@@ -113,8 +111,7 @@ const Dashboard = () => {
   const handleApprove = async (id) => {
     setApprovingId(id);
     try {
-      const duration = approveDuration[id] || settings.defaultBreakDuration;
-      await approveBreak(id, parseInt(duration));
+      await approveBreak(id, 0); // backend ignores duration, uses mode-fixed value
       showToast('Break approved! Operator can now take their break.', 'success');
       fetchData();
     } catch (err) {
@@ -299,14 +296,12 @@ const Dashboard = () => {
                       <td>Break {b.breakNumber}</td>
                       <td>{fmtTime(b.requestedAt)}</td>
                       <td>
-                        <input
-                          type="number"
-                          min="1"
-                          max="60"
-                          defaultValue={b.approvedDuration || modeDefaultDuration}
-                          onChange={(e) => setApproveDuration({ ...approveDuration, [b._id]: e.target.value })}
-                          style={{ width: 60, padding: '6px 8px', border: '1px solid var(--gray-200)', borderRadius: 6, fontSize: 13 }}
-                        /> min
+                        <span style={{ fontWeight: 600, fontSize: 13 }}>
+                          {b.mode === 'qr' ? '60' : '45'} min
+                        </span>
+                        <span className={`badge ${b.mode === 'qr' ? 'badge-blue' : 'badge-gray'}`} style={{ marginLeft: 6, fontSize: 10 }}>
+                          {b.mode === 'qr' ? 'QR' : 'Manual'}
+                        </span>
                       </td>
                       <td>
                         <button className="btn btn-success" onClick={() => handleApprove(b._id)} disabled={approvingId === b._id} style={{ width: 'auto', padding: '10px 16px', fontSize: 13, marginRight: 6 }}>

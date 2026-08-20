@@ -176,7 +176,7 @@ const Scan = () => {
         .card-body { padding: 20px; }
         .scan-btn { width: 100%; padding: 20px; border: 3px dashed var(--primary); border-radius: var(--radius); background: var(--primary-light); color: var(--primary); font-size: 16px; font-weight: 700; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: all 0.2s; font-family: inherit; }
         .scan-btn:hover:not(:disabled) { background: #d4e6fc; transform: scale(1.02); }
-        .scan-btn i { fontSize: 32px; }
+        .scan-btn i { font-size: 32px; }
         .scan-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .btn { padding: 14px; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-success { background: var(--success); color: white; }

@@ -17,6 +17,13 @@ const settingSchema = new mongoose.Schema({
     type: String,
     default: 'BREAK_TIME_QR_2024'
   },
+  qrGeneratedAt: {
+    type: Date,
+    default: null
+  },
+    type: String,
+    default: 'BREAK_TIME_QR_2024'
+  },
   lateThresholdMinutes: {
     type: Number,
     default: 30,

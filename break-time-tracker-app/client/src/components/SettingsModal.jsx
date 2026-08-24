@@ -15,7 +15,8 @@ const SettingsModal = ({ isAdmin, onClose }) => {
     defaultBreakDuration: 15,
     reminderMinutesBeforeEnd: 5,
     lateThresholdMinutes: 30,
-    qrCodeValue: 'BREAK_TIME_QR_2024'
+    qrCodeValue: 'BREAK_TIME_QR_2024',
+    qrGeneratedAt: null
   });
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('password');
@@ -30,6 +31,17 @@ const SettingsModal = ({ isAdmin, onClose }) => {
       setSettings(prev => ({ ...prev, ...res.data }));
     } catch (err) { console.error(err); }
   };
+
+  // Check if QR was already generated today
+  const isSameDay = (d1, d2) => {
+    if (!d1 || !d2) return false;
+    const a = new Date(d1);
+    const b = new Date(d2);
+    return a.getFullYear() === b.getFullYear() &&
+           a.getMonth() === b.getMonth() &&
+           a.getDate() === b.getDate();
+  };
+  const canRegenerateQR = !settings.qrGeneratedAt || !isSameDay(new Date(), settings.qrGeneratedAt);
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
@@ -66,8 +78,53 @@ const SettingsModal = ({ isAdmin, onClose }) => {
   };
 
   const regenerateQR = () => {
+    if (!canRegenerateQR) {
+      setError('QR code can only be regenerated once per day.');
+      return;
+    }
     const newValue = 'BREAK_QR_' + Math.random().toString(36).substring(2, 10).toUpperCase();
-    setSettings(prev => ({ ...prev, qrCodeValue: newValue }));
+    setSettings(prev => ({ ...prev, qrCodeValue: newValue, qrGeneratedAt: new Date().toISOString() }));
+    setMessage('QR code regenerated. Click Save QR Code to download.');
+  };
+
+  // Download QR image with file picker using File System Access API
+  const saveQRImage = async () => {
+    try {
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(settings.qrCodeValue)}`;
+      const response = await fetch(qrUrl);
+      const blob = await response.blob();
+
+      // Use File System Access API if available (Chrome/Edge)
+      if (window.showSaveFilePicker) {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: `break-qr-${new Date().toISOString().split('T')[0]}.png`,
+          types: [{
+            description: 'PNG Image',
+            accept: { 'image/png': ['.png'] }
+          }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        setMessage('QR code saved to your chosen location!');
+      } else {
+        // Fallback for browsers without File System Access API
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `break-qr-${new Date().toISOString().split('T')[0]}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        setMessage('QR code downloaded!');
+      }
+    } catch (err) {
+      // User cancelled picker or other error
+      if (err.name !== 'AbortError') {
+        setError('Failed to save QR code image.');
+      }
+    }
   };
 
   return (
@@ -169,10 +226,22 @@ const SettingsModal = ({ isAdmin, onClose }) => {
                 <label>QR Code Value</label>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <input type="text" value={settings.qrCodeValue} readOnly style={{ ...inputStyle, flex: 1, background: 'var(--gray-100)' }} />
-                  <button type="button" className="btn btn-primary" onClick={regenerateQR} style={{ width: 'auto', padding: '10px 16px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={regenerateQR}
+                    disabled={!canRegenerateQR}
+                    title={canRegenerateQR ? 'Generate new QR code' : 'QR can only be regenerated once per day'}
+                    style={{ width: 'auto', padding: '10px 16px', opacity: canRegenerateQR ? 1 : 0.5 }}
+                  >
                     <i className="fas fa-sync-alt"></i> Regenerate
                   </button>
                 </div>
+                {!canRegenerateQR && (
+                  <div style={{ fontSize: 12, color: 'var(--warning)', marginTop: 6 }}>
+                    <i className="fas fa-info-circle"></i> QR code was already generated today. You can regenerate tomorrow.
+                  </div>
+                )}
               </div>
               <div className="qr-preview">
                 <img
@@ -182,9 +251,14 @@ const SettingsModal = ({ isAdmin, onClose }) => {
                 />
                 <div style={{ fontSize: 12, color: 'var(--gray-500)', marginTop: 8 }}>Scan this QR code to request a break</div>
               </div>
-              <button type="button" className="btn btn-primary" onClick={handleSettingsSave} disabled={settingsLoading} style={{ width: 'auto', padding: '10px 20px' }}>
-                {settingsLoading ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-save"></i>} Save QR Code
-              </button>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+                <button type="button" className="btn btn-primary" onClick={saveQRImage} style={{ width: 'auto', padding: '10px 20px' }}>
+                  <i className="fas fa-download"></i> Save QR Image
+                </button>
+                <button type="button" className="btn btn-primary" onClick={handleSettingsSave} disabled={settingsLoading} style={{ width: 'auto', padding: '10px 20px' }}>
+                  {settingsLoading ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-save"></i>} Save to System
+                </button>
+              </div>
             </div>
             <div className="modal-footer">
               <button type="button" className="btn btn-secondary" onClick={onClose} style={{ width: 'auto', padding: '10px 20px' }}>Close</button>

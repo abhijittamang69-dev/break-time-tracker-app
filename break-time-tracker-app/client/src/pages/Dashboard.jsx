@@ -45,11 +45,10 @@ const Dashboard = () => {
   const myPending = myBreaks.find(b => b.status === 'pending');
 
   const currentMode = myBreaks.length > 0 ? myBreaks[0].mode : null;
-  const isQrLocked = currentMode === 'qr';
 
-  const modeMaxBreaks = isQrLocked ? 4 : 3;
-  const modeDefaultDuration = 15;
-  const modeMaxMinutes = isQrLocked ? 60 : 45;
+  const modeMaxBreaks = settings.maxBreaksPerShift || 3;
+  const modeDefaultDuration = settings.defaultBreakDuration || 15;
+  const modeMaxMinutes = settings.maxBreakMinutes || 60;
 
   const myTotalUsed = myCompleted.reduce((sum, b) => sum + (b.duration || 0), 0);
   const remainingMinutes = Math.max(0, modeMaxMinutes - Math.floor(myTotalUsed / 60));
@@ -180,7 +179,7 @@ const Dashboard = () => {
               <i className={`fas ${currentMode === 'qr' ? 'fa-qrcode' : 'fa-hand-pointer'}`}></i>
               <div>
                 <div className="mode-title">{currentMode === 'qr' ? 'QR Code Mode' : 'Manual Mode'}</div>
-                <div className="mode-sub">{currentMode === 'qr' ? '15 min each · 4 breaks per shift (60 min total)' : '15 min each · 3 breaks per shift (45 min total)'}</div>
+                <div className="mode-sub">{modeDefaultDuration} min each · {modeMaxBreaks} breaks per shift ({modeMaxMinutes} min total)</div>
               </div>
             </div>
           )}
@@ -225,7 +224,7 @@ const Dashboard = () => {
               </div>
               <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
                 <MiniStat value={breaksTaken} label="Breaks Taken" />
-                <MiniStat value={modeDefaultDuration} label="Minutes Left" />
+                <MiniStat value={remainingMinutes} label="Minutes Left" />
                 <MiniStat value={modeMaxBreaks - breaksTaken} label="Breaks Left" />
               </div>
               {canRequestBreak ? (
@@ -267,7 +266,7 @@ const Dashboard = () => {
                       <td>Break {b.breakNumber}</td>
                       <td>{fmtTime(b.requestedAt)}</td>
                       <td>
-                        <span style={{ fontWeight: 600, fontSize: 13 }}>15 min</span>
+                        <span style={{ fontWeight: 600, fontSize: 13 }}>{b.approvedDuration || modeDefaultDuration} min</span>
                         <span className={`badge ${b.mode === 'qr' ? 'badge-blue' : 'badge-gray'}`} style={{ marginLeft: 6, fontSize: 10 }}>
                           {b.mode === 'qr' ? 'QR' : 'Manual'}
                         </span>
@@ -311,7 +310,7 @@ const Dashboard = () => {
                 {activeBreaks.map(b => {
                   const u = allUsers.find(u => u._id === b.userId || u._id?.toString() === b.userId?.toString());
                   const elapsed = Math.floor((Date.now() - new Date(b.startTime).getTime()) / 1000);
-                  const totalSec = (b.approvedDuration || 15) * 60;
+                  const totalSec = (b.approvedDuration || modeDefaultDuration) * 60;
                   const remaining = totalSec - elapsed;
                   const isOverdue = remaining <= 0;
                   return (

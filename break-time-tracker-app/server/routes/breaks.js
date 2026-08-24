@@ -48,13 +48,16 @@ const autoApprovePendingBreaks = async () => {
       requestedAt: { $lte: cutoff }
     });
 
+    const settings = await Setting.findOne();
+    const defaultDuration = settings?.defaultBreakDuration || 15;
+
     for (const breakRecord of stalePending) {
       breakRecord.status = 'active';
       breakRecord.startTime = new Date();
       breakRecord.approvedBy = null;
       breakRecord.approvedByName = 'Auto-Approved';
       breakRecord.approvedAt = new Date();
-      breakRecord.approvedDuration = 15;
+      breakRecord.approvedDuration = defaultDuration;
       await breakRecord.save();
     }
 
@@ -165,10 +168,11 @@ router.post('/request', auth, async (req, res) => {
       }
     }
 
-    const isQr = mode === 'qr';
-    const maxBreaks = isQr ? 4 : 3;
-    const defaultDuration = 15;
-    const maxTotalMinutes = isQr ? 60 : 45;
+    const settings = await Setting.findOne();
+    const s = settings || {};
+    const maxBreaks = s.maxBreaksPerShift || 3;
+    const defaultDuration = s.defaultBreakDuration || 15;
+    const maxTotalMinutes = s.maxBreakMinutes || 60;
 
     const todayBreaks = await Break.find({
       userId: userId,
@@ -224,14 +228,15 @@ router.post('/approve/:id', auth, isApprover, async (req, res) => {
       return res.status(403).json({ message: 'You cannot approve your own break request' });
     }
 
-    const fixedDuration = 15;
+    const settings = await Setting.findOne();
+    const approvedDuration = breakRecord.approvedDuration || settings?.defaultBreakDuration || 15;
 
     breakRecord.status = 'active';
     breakRecord.startTime = new Date();
     breakRecord.approvedBy = req.user._id;
     breakRecord.approvedByName = req.user.name;
     breakRecord.approvedAt = new Date();
-    breakRecord.approvedDuration = fixedDuration;
+    breakRecord.approvedDuration = approvedDuration;
 
     await breakRecord.save();
     res.json(breakRecord);

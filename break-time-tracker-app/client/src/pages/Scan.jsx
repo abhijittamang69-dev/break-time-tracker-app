@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Html5QrcodeScanner, Html5Qrcode } from 'html5-qrcode';
 import { useAuth } from '../context/AuthContext';
 import { requestBreak, endBreak, getTodayBreaks } from '../api/breaks';
+import { getSettings } from '../api/settings';
 import Toast from '../components/Toast';
 
 // Break area coordinates: 25°14'28.90"N 51°28'31.51"E
@@ -30,8 +31,13 @@ const Scan = () => {
   const [myPendingBreak, setMyPendingBreak] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
+  const [settings, setSettings] = useState({ maxBreakMinutes: 60, maxBreaksPerShift: 3, defaultBreakDuration: 15, reminderMinutesBeforeEnd: 5 });
 
   const isOperator = user?.role === 'Operator';
+
+  const modeMaxBreaks = settings.maxBreaksPerShift || 3;
+  const modeDefaultDuration = settings.defaultBreakDuration || 15;
+  const modeMaxMinutes = settings.maxBreakMinutes || 60;
 
   const checkBreakStatus = useCallback(async () => {
     try {
@@ -42,7 +48,11 @@ const Scan = () => {
     } catch (err) { console.error(err); }
   }, [user]);
 
-  useEffect(() => { checkBreakStatus(); }, [checkBreakStatus]);
+  useEffect(() => {
+    checkBreakStatus();
+    // Fetch settings
+    getSettings().then(res => setSettings(res.data)).catch(() => {});
+  }, [checkBreakStatus]);
 
   const showToast = (message, type) => setToast({ message, type });
 
@@ -86,7 +96,7 @@ const Scan = () => {
         const res = await getTodayBreaks();
         const myBreaks = res.data.filter(b => b.userId === user?.id || b.userId?._id === user?.id);
         const completed = myBreaks.filter(b => b.status === 'completed' || b.status === 'late');
-        await requestBreak(completed.length + 1, 15, 'qr', lat, lng);
+        await requestBreak(completed.length + 1, modeDefaultDuration, 'qr', lat, lng);
         showToast('Break requested! Waiting for supervisor approval.', 'success');
       } else if (!isOperator && !myActiveBreak) {
         showToast('Only Operators can request breaks. Use Dashboard to approve requests.', 'info');
@@ -195,7 +205,7 @@ const Scan = () => {
               <div style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 24 }}>
                 {myActiveBreak
                   ? 'Scan QR to end your break and return to work'
-                  : 'Scan QR to request a break (15 min · Up to 4 per shift)'}
+                  : `Scan QR to request a break (${modeDefaultDuration} min · Up to ${modeMaxBreaks} per shift)`}
               </div>
 
               {/* Main button - directly triggers browser native file picker */}
@@ -227,7 +237,7 @@ const Scan = () => {
         <div className="card-body">
           <div className="break-list">
             {[
-              { icon: 'fa-paper-plane', title: 'Request Break', desc: 'Operator scans QR to request a break (15 min, max 4 per shift)' },
+              { icon: 'fa-paper-plane', title: 'Request Break', desc: `Operator scans QR to request a break (${modeDefaultDuration} min, max ${modeMaxBreaks} per shift)` },
               { icon: 'fa-user-check', title: 'Supervisor Approval', desc: 'Supervisor/Team Leader/Coordinator reviews and approves' },
               { icon: 'fa-play-circle', title: 'Break Starts', desc: 'Once approved, break timer begins automatically' },
               { icon: 'fa-bell', title: '5-Min Reminder', desc: 'Operator gets notified 5 minutes before break ends' },

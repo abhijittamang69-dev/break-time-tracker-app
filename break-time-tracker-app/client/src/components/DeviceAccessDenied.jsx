@@ -13,108 +13,52 @@ const DeviceAccessDenied = () => {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%)',
-      padding: '20px'
-    }}>
-      <div style={{
-        background: 'white',
-        borderRadius: '16px',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        width: '100%',
-        maxWidth: '420px',
-        padding: '40px',
-        textAlign: 'center'
-      }}>
-        <div style={{
-          width: '80px',
-          height: '80px',
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0 auto 24px'
-        }}>
-          <i className="fas fa-ban" style={{ fontSize: '36px', color: 'white' }}></i>
+    <div className="device-denied-page">
+      <div className="device-denied-card">
+        <div className="device-denied-icon">
+          <i className="fas fa-ban"></i>
         </div>
 
-        <h1 style={{
-          fontSize: '24px',
-          fontWeight: 800,
-          color: '#dc2626',
-          marginBottom: '12px',
-          letterSpacing: '-0.5px'
-        }}>
-          Access Restricted
-        </h1>
+        <h1 className="device-denied-title">Access Restricted</h1>
 
-        <div style={{
-          background: '#fef2f2',
-          border: '1px solid #fecaca',
-          borderRadius: '12px',
-          padding: '16px',
-          marginBottom: '24px'
-        }}>
-          <p style={{
-            fontSize: '14px',
-            color: '#991b1b',
-            fontWeight: 600,
-            marginBottom: '8px'
-          }}>
+        <div className="device-denied-alert">
+          <p className="device-denied-alert-title">
             <i className="fas fa-exclamation-triangle" style={{ marginRight: '8px' }}></i>
             {errorType === 'DEVICE_DEACTIVATED' ? 'Device Deactivated' : 'Unregistered Device'}
           </p>
-          <p style={{
-            fontSize: '13px',
-            color: '#7f1d1d',
-            lineHeight: 1.6
-          }}>
+          <p className="device-denied-alert-text">
             {errorDesc || 'This device is not registered or has been deactivated. Please contact your supervisor or administrator to gain access.'}
           </p>
         </div>
 
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px'
-        }}>
-          <button
-            onClick={handleLogout}
-            style={{
-              width: '100%',
-              padding: '14px',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '15px',
-              fontWeight: 600,
-              fontFamily: 'inherit',
-              cursor: 'pointer',
-              background: '#dc2626',
-              color: 'white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px'
-            }}
-          >
-            <i className="fas fa-sign-out-alt"></i>
-            Return to Login
-          </button>
-        </div>
+        <button className="device-denied-btn" onClick={handleLogout}>
+          <i className="fas fa-sign-out-alt"></i>
+          Return to Login
+        </button>
 
-        <p style={{
-          fontSize: '12px',
-          color: '#9ca3af',
-          marginTop: '20px'
-        }}>
-          Break Time Tracker App - Device Security
-        </p>
+        <p className="device-denied-footer">Break Time Tracker App - Device Security</p>
       </div>
+
+      <style>{`
+        .device-denied-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%); padding: 20px; }
+        .device-denied-card { background: white; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); width: 100%; max-width: 420px; padding: 40px; text-align: center; }
+        .device-denied-icon { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+        .device-denied-icon i { font-size: 36px; color: white; }
+        .device-denied-title { font-size: 24px; font-weight: 800; color: #dc2626; margin-bottom: 12px; letter-spacing: -0.5px; }
+        .device-denied-alert { background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 16px; margin-bottom: 24px; }
+        .device-denied-alert-title { font-size: 14px; color: #991b1b; font-weight: 600; margin-bottom: 8px; }
+        .device-denied-alert-text { font-size: 13px; color: #7f1d1d; line-height: 1.6; }
+        .device-denied-btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; background: #dc2626; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .device-denied-footer { font-size: 12px; color: #9ca3af; margin-top: 20px; }
+
+        @media (prefers-color-scheme: dark) {
+          .device-denied-card { background: var(--gray-100); }
+          .device-denied-alert { background: var(--gray-200); border-color: var(--gray-300); }
+          .device-denied-alert-title { color: var(--gray-800); }
+          .device-denied-alert-text { color: var(--gray-600); }
+          .device-denied-footer { color: var(--gray-500); }
+        }
+      `}</style>
     </div>
   );
 };

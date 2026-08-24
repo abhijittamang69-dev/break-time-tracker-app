@@ -390,14 +390,14 @@ const Dashboard = () => {
         .pulse { animation: pulse 2s ease-in-out infinite; }
 
         @media (prefers-color-scheme: dark) {
-          .stat-card { background: var(--gray-800); border-color: var(--gray-700); }
-          .card { background: var(--gray-800); border-color: var(--gray-700); }
+          .stat-card { background: var(--gray-100); border-color: var(--gray-700); }
+          .card { background: var(--gray-100); border-color: var(--gray-700); }
           .card-header { border-bottom-color: var(--gray-700); }
           .card-header h3 { color: var(--gray-200); }
           .data-table th { border-bottom-color: var(--gray-600); color: var(--gray-400); }
           .data-table td { border-bottom-color: var(--gray-700); color: var(--gray-200); }
-          .data-table tr:hover td { background: var(--gray-700); }
-          .mode-banner.manual { background: var(--gray-700); color: var(--gray-200); border-color: var(--gray-600); }
+          .data-table tr:hover td { background: var(--gray-200); }
+          .mode-banner.manual { background: var(--gray-200); color: var(--gray-200); border-color: var(--gray-600); }
           .alert-warning { border-color: #7f1d1d; }
         }
         @media (max-width: 480px) { .stats-grid { gap: 8px; } .stat-card { padding: 12px; } .stat-value { font-size: 20px; } .timer-value { font-size: 36px; } }

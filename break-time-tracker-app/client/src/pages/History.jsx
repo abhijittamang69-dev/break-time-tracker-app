@@ -81,14 +81,14 @@ const History = () => {
         .empty-state p { font-size: 13px; color: var(--gray-500); }
 
         @media (prefers-color-scheme: dark) {
-          .tab.active { background: var(--gray-800); }
+          .tab.active { background: var(--gray-100); }
           .date-header { color: var(--gray-400); }
-          .break-item { background: var(--gray-700); border-color: var(--gray-600); }
+          .break-item { background: var(--gray-200); border-color: var(--gray-600); }
           .break-item.pending { background: var(--primary-light); border-color: var(--primary); }
           .break-item.active { background: var(--orange-light); border-color: var(--orange); }
           .break-item.completed { background: var(--success-light); border-color: var(--success); }
           .break-item.late { background: var(--warning-light); border-color: var(--warning); }
-          .break-item.rejected { background: var(--gray-700); border-color: var(--gray-600); opacity: 0.7; }
+          .break-item.rejected { background: var(--gray-200); border-color: var(--gray-600); opacity: 0.7; }
           .break-title { color: var(--gray-200); }
           .break-time { color: var(--gray-400); }
           .break-duration { color: var(--gray-300); }

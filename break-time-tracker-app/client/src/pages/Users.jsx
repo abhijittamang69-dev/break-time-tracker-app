@@ -221,19 +221,19 @@ const Users = () => {
         .restricted-badge { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--primary-light); border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--primary); }
 
         @media (prefers-color-scheme: dark) {
-          .card { background: var(--gray-800); border-color: var(--gray-700); }
+          .card { background: var(--gray-100); border-color: var(--gray-700); }
           .card-header { border-bottom-color: var(--gray-700); }
           .card-header h3 { color: var(--gray-200); }
-          .modal { background: var(--gray-800); }
+          .modal { background: var(--gray-100); }
           .modal-header { border-bottom-color: var(--gray-700); }
           .modal-header h3 { color: var(--gray-100); }
           .modal-footer { border-top-color: var(--gray-700); }
-          .modal-close { background: var(--gray-700); color: var(--gray-300); }
-          .modal-close:hover { background: var(--gray-600); color: var(--gray-100); }
-          .header-btn { background: var(--gray-800); border-color: var(--gray-600); color: var(--gray-300); }
-          .header-btn:hover { background: var(--gray-700); color: var(--gray-100); }
-          .input-wrapper input { background: var(--gray-700); border-color: var(--gray-600); color: var(--gray-100); }
-          .input-wrapper input:focus { background: var(--gray-800); }
+          .modal-close { background: var(--gray-200); color: var(--gray-300); }
+          .modal-close:hover { background: var(--gray-300); color: var(--gray-100); }
+          .header-btn { background: var(--gray-100); border-color: var(--gray-600); color: var(--gray-300); }
+          .header-btn:hover { background: var(--gray-200); color: var(--gray-100); }
+          .input-wrapper input { background: var(--gray-200); border-color: var(--gray-600); color: var(--gray-100); }
+          .input-wrapper input:focus { background: var(--gray-100); }
           .restricted-title { color: var(--gray-100); }
           .restricted-text { color: var(--gray-400); }
         }

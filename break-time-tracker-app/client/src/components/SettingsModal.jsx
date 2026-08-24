@@ -222,21 +222,21 @@ const SettingsModal = ({ isAdmin, onClose }) => {
         .qr-preview { padding: 20px; background: var(--gray-50); border-radius: 12px; border: 2px dashed var(--gray-300); margin-bottom: 16px; }
 
         @media (prefers-color-scheme: dark) {
-          .modal { background: var(--gray-800); }
+          .modal { background: var(--gray-100); }
           .modal-header { border-bottom-color: var(--gray-700); }
           .modal-header h3 { color: var(--gray-100); }
           .modal-tabs { border-bottom-color: var(--gray-700); }
           .modal-tab { color: var(--gray-400); }
           .modal-tab.active { background: var(--primary-light); color: var(--primary); }
-          .modal-tab:hover { color: var(--gray-200); background: var(--gray-700); }
+          .modal-tab:hover { color: var(--gray-200); background: var(--gray-200); }
           .modal-footer { border-top-color: var(--gray-700); }
-          .modal-close { background: var(--gray-700); color: var(--gray-300); }
-          .modal-close:hover { background: var(--gray-600); color: var(--gray-100); }
-          .input-wrapper input { background: var(--gray-700); border-color: var(--gray-600); color: var(--gray-100); }
-          .input-wrapper input:focus { background: var(--gray-800); }
+          .modal-close { background: var(--gray-200); color: var(--gray-300); }
+          .modal-close:hover { background: var(--gray-300); color: var(--gray-100); }
+          .input-wrapper input { background: var(--gray-200); border-color: var(--gray-600); color: var(--gray-100); }
+          .input-wrapper input:focus { background: var(--gray-100); }
           .alert-success { border-color: #14532d; }
           .alert-warning { border-color: #7f1d1d; }
-          .qr-preview { background: var(--gray-700); border-color: var(--gray-600); }
+          .qr-preview { background: var(--gray-200); border-color: var(--gray-600); }
         }
       `}</style>
     </div>

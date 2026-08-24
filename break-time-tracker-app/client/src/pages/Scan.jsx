@@ -26,6 +26,7 @@ const Scan = () => {
   const cameraInputRef = useRef(null);
   const galleryInputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const [showSheet, setShowSheet] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [toast, setToast] = useState(null);
   const [myActiveBreak, setMyActiveBreak] = useState(null);
@@ -112,6 +113,7 @@ const Scan = () => {
   const onScanError = () => {};
 
   const startCameraScanner = () => {
+    setShowSheet(false);
     setScanning(true);
     setTimeout(() => {
       scannerRef.current = new Html5QrcodeScanner('reader', { qrbox: { width: 250, height: 250 }, fps: 10 }, false);
@@ -129,6 +131,7 @@ const Scan = () => {
 
   const handleFileScan = async (file) => {
     if (!file) return;
+    setShowSheet(false);
     setActionLoading(true);
     try {
       const html5QrCode = new Html5Qrcode('file-reader');
@@ -153,6 +156,7 @@ const Scan = () => {
   };
 
   const openGoogleDrive = () => {
+    setShowSheet(false);
     showToast('Google Drive: Please download the QR image first, then use Choose File.', 'info');
     if (fileInputRef.current) fileInputRef.current.click();
   };
@@ -203,35 +207,21 @@ const Scan = () => {
                 <i className="fas fa-qrcode" style={{ fontSize: 48, color: 'var(--gray-400)' }}></i>
               </div>
               <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--gray-700)', marginBottom: 4 }}>Break Area QR Code</div>
-              <div style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 20 }}>
+              <div style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 24 }}>
                 {myActiveBreak
                   ? 'Scan QR to end your break and return to work'
                   : 'Scan QR to request a break (15 min · Up to 4 per shift)'}
               </div>
 
-              {/* Inline action buttons — no popup */}
-              <div className="scan-actions">
-                <button className="scan-action-btn" onClick={startCameraScanner} disabled={actionLoading}>
-                  <div className="scan-action-icon scan-icon-scanner"><i className="fas fa-expand"></i></div>
-                  <span className="scan-action-label">Camera Scanner</span>
-                </button>
-                <button className="scan-action-btn" onClick={() => cameraInputRef.current?.click()} disabled={actionLoading}>
-                  <div className="scan-action-icon scan-icon-camera"><i className="fas fa-camera"></i></div>
-                  <span className="scan-action-label">Take Photo</span>
-                </button>
-                <button className="scan-action-btn" onClick={() => galleryInputRef.current?.click()} disabled={actionLoading}>
-                  <div className="scan-action-icon scan-icon-gallery"><i className="fas fa-images"></i></div>
-                  <span className="scan-action-label">Photo Library</span>
-                </button>
-                <button className="scan-action-btn" onClick={() => fileInputRef.current?.click()} disabled={actionLoading}>
-                  <div className="scan-action-icon scan-icon-file"><i className="fas fa-folder-open"></i></div>
-                  <span className="scan-action-label">Choose File</span>
-                </button>
-                <button className="scan-action-btn" onClick={openGoogleDrive} disabled={actionLoading}>
-                  <div className="scan-action-icon scan-icon-drive"><i className="fab fa-google-drive"></i></div>
-                  <span className="scan-action-label">Google Drive</span>
-                </button>
-              </div>
+              {/* Main single button */}
+              <button
+                className="scan-main-btn"
+                onClick={() => setShowSheet(true)}
+                disabled={actionLoading}
+              >
+                <i className="fas fa-qrcode" style={{ fontSize: 28 }}></i>
+                <span>Scan QR Code for Break</span>
+              </button>
 
               {/* Location hint */}
               {!myActiveBreak && (
@@ -246,6 +236,34 @@ const Scan = () => {
           )}
         </div>
       </div>
+
+      {/* Compact Action Sheet Popup */}
+      {showSheet && (
+        <div className="sheet-overlay" onClick={() => setShowSheet(false)}>
+          <div className="sheet-popup" onClick={(e) => e.stopPropagation()}>
+            <button className="sheet-row" onClick={() => { setShowSheet(false); if (cameraInputRef.current) cameraInputRef.current.click(); }}>
+              <i className="fas fa-camera sheet-row-icon"></i>
+              <span className="sheet-row-label">Take Photo</span>
+            </button>
+            <button className="sheet-row" onClick={() => { setShowSheet(false); if (galleryInputRef.current) galleryInputRef.current.click(); }}>
+              <i className="fas fa-images sheet-row-icon"></i>
+              <span className="sheet-row-label">Photo Library</span>
+            </button>
+            <button className="sheet-row" onClick={() => { setShowSheet(false); if (fileInputRef.current) fileInputRef.current.click(); }}>
+              <i className="fas fa-folder-open sheet-row-icon"></i>
+              <span className="sheet-row-label">Choose File</span>
+            </button>
+            <button className="sheet-row" onClick={openGoogleDrive}>
+              <i className="fab fa-google-drive sheet-row-icon"></i>
+              <span className="sheet-row-label">Google Drive</span>
+            </button>
+            <div className="sheet-divider"></div>
+            <button className="sheet-row sheet-cancel" onClick={() => setShowSheet(false)}>
+              <span className="sheet-row-label">Cancel</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="card">
         <div className="card-header"><h3><i className="fas fa-info-circle" style={{ marginRight: 8, color: 'var(--primary)' }}></i>How It Works</h3></div>
@@ -277,6 +295,9 @@ const Scan = () => {
         .card-header { padding: 16px 20px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; justify-content: space-between; }
         .card-header h3 { font-size: 15px; font-weight: 600; color: var(--gray-800); }
         .card-body { padding: 20px; }
+        .scan-main-btn { width: 100%; max-width: 320px; padding: 24px; border: 3px dashed var(--primary); border-radius: var(--radius); background: var(--primary-light); color: var(--primary); font-size: 18px; font-weight: 700; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 10px; transition: all 0.2s; font-family: inherit; margin: 0 auto; }
+        .scan-main-btn:hover:not(:disabled) { background: #d4e6fc; transform: scale(1.02); }
+        .scan-main-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .btn { padding: 14px; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-secondary { background: var(--gray-100); color: var(--gray-700); border: 1px solid var(--gray-200); }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -284,18 +305,16 @@ const Scan = () => {
         .location-hint { margin-top: 16px; padding: 10px; background: var(--success-light); border-radius: 8px; border: 1px solid var(--success-light); }
         .location-hint-text { font-size: 12px; color: var(--success); }
 
-        /* Inline scan action buttons */
-        .scan-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 360px; margin: 0 auto; }
-        .scan-action-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--gray-50); cursor: pointer; transition: all 0.15s; font-family: inherit; }
-        .scan-action-btn:hover:not(:disabled) { background: var(--gray-100); transform: translateY(-1px); }
-        .scan-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .scan-action-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
-        .scan-action-label { font-size: 11px; font-weight: 600; color: var(--gray-700); line-height: 1.2; }
-        .scan-icon-scanner { background: var(--primary-light); color: var(--primary); }
-        .scan-icon-camera { background: var(--primary-light); color: var(--primary); }
-        .scan-icon-gallery { background: var(--warning-light); color: var(--warning); }
-        .scan-icon-file { background: var(--orange-light); color: var(--orange); }
-        .scan-icon-drive { background: #e0e7ff; color: #4f46e5; }
+        /* Compact Action Sheet */
+        .sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.15s ease; padding: 20px; }
+        .sheet-popup { background: white; border-radius: var(--radius); width: 100%; max-width: 300px; box-shadow: var(--shadow-lg); overflow: hidden; animation: scaleIn 0.2s ease; }
+        .sheet-row { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border: none; background: none; cursor: pointer; transition: background 0.15s; font-family: inherit; text-align: left; width: 100%; }
+        .sheet-row:hover { background: var(--gray-50); }
+        .sheet-row-icon { font-size: 18px; color: var(--gray-500); width: 24px; text-align: center; }
+        .sheet-row-label { font-size: 15px; font-weight: 500; color: var(--gray-800); }
+        .sheet-divider { height: 1px; background: var(--gray-100); margin: 0 18px; }
+        .sheet-cancel { justify-content: center; }
+        .sheet-cancel .sheet-row-label { font-weight: 600; color: var(--gray-600); }
 
         .break-list { display: flex; flex-direction: column; gap: 10px; }
         .break-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--gray-50); border-radius: var(--radius-sm); border: 1px solid var(--gray-100); }
@@ -305,21 +324,23 @@ const Scan = () => {
         .break-time { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
         @media (prefers-color-scheme: dark) {
-          .card { background: var(--gray-800); border-color: var(--gray-700); }
-          .card-header { border-bottom-color: var(--gray-700); }
-          .card-header h3 { color: var(--gray-200); }
-          .scan-action-btn { background: var(--gray-700); border-color: var(--gray-600); }
-          .scan-action-btn:hover:not(:disabled) { background: var(--gray-600); }
-          .scan-action-label { color: var(--gray-200); }
-          .scan-icon-drive { background: #312e81; color: #a5b4fc; }
-          .break-item { background: var(--gray-700); border-color: var(--gray-600); }
-          .break-title { color: var(--gray-200); }
-          .break-time { color: var(--gray-400); }
+          .card { background: var(--gray-100); border-color: var(--gray-200); }
+          .card-header { border-bottom-color: var(--gray-200); }
+          .card-header h3 { color: var(--gray-800); }
+          .scan-main-btn:hover:not(:disabled) { background: #1e3a5f; }
+          .sheet-popup { background: var(--gray-100); }
+          .sheet-row:hover { background: var(--gray-200); }
+          .sheet-row-label { color: var(--gray-800); }
+          .sheet-divider { background: var(--gray-200); }
+          .sheet-cancel .sheet-row-label { color: var(--gray-500); }
+          .break-item { background: var(--gray-200); border-color: var(--gray-300); }
+          .break-title { color: var(--gray-800); }
+          .break-time { color: var(--gray-500); }
         }
-        @media (max-width: 480px) { .scan-actions { grid-template-columns: repeat(3, 1fr); gap: 8px; } .scan-action-btn { padding: 10px 4px; } .scan-action-icon { width: 32px; height: 32px; font-size: 13px; } }
+        @media (max-width: 480px) { .scan-main-btn { padding: 18px; font-size: 16px; } }
       `}</style>
     </div>
   );

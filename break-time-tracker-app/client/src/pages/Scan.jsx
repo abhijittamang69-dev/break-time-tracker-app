@@ -23,8 +23,10 @@ const getDistanceMeters = (lat1, lng1, lat2, lng2) => {
 const Scan = () => {
   const { user } = useAuth();
   const scannerRef = useRef(null);
+  const cameraInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
   const fileInputRef = useRef(null);
-  const [showOptions, setShowOptions] = useState(false);
+  const [showSheet, setShowSheet] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [toast, setToast] = useState(null);
   const [myActiveBreak, setMyActiveBreak] = useState(null);
@@ -111,7 +113,7 @@ const Scan = () => {
   const onScanError = () => {};
 
   const startCameraScanner = () => {
-    setShowOptions(false);
+    setShowSheet(false);
     setScanning(true);
     setTimeout(() => {
       scannerRef.current = new Html5QrcodeScanner('reader', { qrbox: { width: 250, height: 250 }, fps: 10 }, false);
@@ -129,7 +131,7 @@ const Scan = () => {
 
   const handleFileScan = async (file) => {
     if (!file) return;
-    setShowOptions(false);
+    setShowSheet(false);
     setActionLoading(true);
     try {
       const html5QrCode = new Html5Qrcode('file-reader');
@@ -147,12 +149,15 @@ const Scan = () => {
       showToast('Could not read QR code from image. Please try again.', 'error');
     } finally {
       setActionLoading(false);
+      if (cameraInputRef.current) cameraInputRef.current.value = '';
+      if (galleryInputRef.current) galleryInputRef.current.value = '';
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
-  const openFilePicker = () => {
-    setShowOptions(false);
+  const openGoogleDrive = () => {
+    setShowSheet(false);
+    showToast('Google Drive: Please download the QR image first, then use Choose File.', 'info');
     if (fileInputRef.current) fileInputRef.current.click();
   };
 
@@ -166,14 +171,10 @@ const Scan = () => {
       <h1 className="page-title">QR Code Scanner</h1>
       <p className="page-subtitle">Scan to request or end your break</p>
 
-      {/* Hidden file input for gallery/file */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: 'none' }}
-        onChange={(e) => handleFileScan(e.target.files[0])}
-      />
+      {/* Hidden file inputs */}
+      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(e) => handleFileScan(e.target.files[0])} />
+      <input ref={galleryInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleFileScan(e.target.files[0])} />
+      <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleFileScan(e.target.files[0])} />
 
       {/* File reader placeholder (needed by Html5Qrcode) */}
       <div id="file-reader" style={{ display: 'none' }}></div>
@@ -200,41 +201,6 @@ const Scan = () => {
               <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--primary)', marginBottom: 4 }}>Break Request Pending</div>
               <div style={{ fontSize: 13, color: 'var(--gray-600)' }}>Waiting for supervisor approval...</div>
             </div>
-          ) : showOptions ? (
-            /* Modal / Overlay with Camera, Gallery, File options */
-            <div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--gray-800)', marginBottom: 20 }}>
-                <i className="fas fa-qrcode" style={{ marginRight: 8, color: 'var(--primary)' }}></i>
-                Choose QR Scan Method
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, maxWidth: 400, margin: '0 auto 20px' }}>
-                <button className="scan-option-btn" onClick={startCameraScanner} disabled={actionLoading}>
-                  <div className="scan-option-icon" style={{ background: '#dbeafe', color: '#1a56db' }}>
-                    <i className="fas fa-camera"></i>
-                  </div>
-                  <div className="scan-option-label">Camera</div>
-                </button>
-
-                <button className="scan-option-btn" onClick={openFilePicker} disabled={actionLoading}>
-                  <div className="scan-option-icon" style={{ background: '#d1fae5', color: '#0e9f6e' }}>
-                    <i className="fas fa-images"></i>
-                  </div>
-                  <div className="scan-option-label">Gallery</div>
-                </button>
-
-                <button className="scan-option-btn" onClick={openFilePicker} disabled={actionLoading}>
-                  <div className="scan-option-icon" style={{ background: '#fef3c7', color: '#d97706' }}>
-                    <i className="fas fa-folder-open"></i>
-                  </div>
-                  <div className="scan-option-label">File</div>
-                </button>
-              </div>
-
-              <button className="btn btn-secondary" onClick={() => setShowOptions(false)} style={{ width: 'auto', padding: '10px 24px' }}>
-                <i className="fas fa-arrow-left"></i> Back
-              </button>
-            </div>
           ) : (
             <>
               <div style={{ width: 120, height: 120, margin: '0 auto 20px', background: 'var(--gray-100)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px dashed var(--gray-300)' }}>
@@ -250,7 +216,7 @@ const Scan = () => {
               {/* Main single button */}
               <button
                 className="scan-main-btn"
-                onClick={() => setShowOptions(true)}
+                onClick={() => setShowSheet(true)}
                 disabled={actionLoading}
               >
                 <i className="fas fa-qrcode" style={{ fontSize: 28 }}></i>
@@ -270,6 +236,37 @@ const Scan = () => {
           )}
         </div>
       </div>
+
+      {/* Bottom Sheet Modal */}
+      {showSheet && (
+        <div className="sheet-overlay" onClick={() => setShowSheet(false)}>
+          <div className="sheet-content" onClick={(e) => e.stopPropagation()}>
+            <div className="sheet-header">
+              <div className="sheet-drag-bar"></div>
+              <div className="sheet-title">Choose QR Source</div>
+            </div>
+            <div className="sheet-options">
+              <button className="sheet-option" onClick={() => { setShowSheet(false); if (cameraInputRef.current) cameraInputRef.current.click(); }}>
+                <div className="sheet-icon" style={{ background: '#dbeafe', color: '#1a56db' }}><i className="fas fa-camera"></i></div>
+                <div className="sheet-label">Take Photo</div>
+              </button>
+              <button className="sheet-option" onClick={() => { setShowSheet(false); if (galleryInputRef.current) galleryInputRef.current.click(); }}>
+                <div className="sheet-icon" style={{ background: '#fce7f3', color: '#db2777' }}><i className="fas fa-images"></i></div>
+                <div className="sheet-label">Photo Library</div>
+              </button>
+              <button className="sheet-option" onClick={() => { setShowSheet(false); if (fileInputRef.current) fileInputRef.current.click(); }}>
+                <div className="sheet-icon" style={{ background: '#fef3c7', color: '#d97706' }}><i className="fas fa-folder-open"></i></div>
+                <div className="sheet-label">Choose File</div>
+              </button>
+              <button className="sheet-option" onClick={openGoogleDrive}>
+                <div className="sheet-icon" style={{ background: '#e0e7ff', color: '#4f46e5' }}><i className="fab fa-google-drive"></i></div>
+                <div className="sheet-label">Google Drive</div>
+              </button>
+            </div>
+            <button className="sheet-cancel" onClick={() => setShowSheet(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
 
       <div className="card">
         <div className="card-header"><h3><i className="fas fa-info-circle" style={{ marginRight: 8, color: 'var(--primary)' }}></i>How It Works</h3></div>
@@ -304,21 +301,34 @@ const Scan = () => {
         .scan-main-btn { width: 100%; max-width: 320px; padding: 24px; border: 3px dashed var(--primary); border-radius: var(--radius); background: var(--primary-light); color: var(--primary); font-size: 18px; font-weight: 700; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 10px; transition: all 0.2s; font-family: inherit; margin: 0 auto; }
         .scan-main-btn:hover:not(:disabled) { background: #d4e6fc; transform: scale(1.02); }
         .scan-main-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .scan-option-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 8px; border: 2px dashed var(--gray-200); border-radius: var(--radius); background: white; cursor: pointer; transition: all 0.2s; font-family: inherit; }
-        .scan-option-btn:hover:not(:disabled) { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
-        .scan-option-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .scan-option-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-        .scan-option-label { font-size: 12px; font-weight: 600; color: var(--gray-700); }
         .btn { padding: 14px; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-secondary { background: var(--gray-100); color: var(--gray-700); border: 1px solid var(--gray-200); }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Bottom Sheet */
+        .sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: flex-end; justify-content: center; animation: fadeIn 0.2s ease; }
+        .sheet-content { width: 100%; max-width: 480px; background: white; border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 12px 16px 24px; animation: slideUp 0.3s ease; }
+        .sheet-header { text-align: center; margin-bottom: 12px; }
+        .sheet-drag-bar { width: 40px; height: 4px; background: var(--gray-300); border-radius: 2px; margin: 0 auto 12px; }
+        .sheet-title { font-size: 16px; font-weight: 700; color: var(--gray-800); }
+        .sheet-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+        .sheet-option { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--radius); border: none; background: var(--gray-50); cursor: pointer; transition: all 0.15s; font-family: inherit; text-align: left; }
+        .sheet-option:hover { background: var(--gray-100); }
+        .sheet-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .sheet-label { font-size: 15px; font-weight: 600; color: var(--gray-800); }
+        .sheet-cancel { width: 100%; padding: 14px; border-radius: var(--radius); border: none; background: var(--gray-100); color: var(--gray-700); font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; }
+        .sheet-cancel:hover { background: var(--gray-200); }
+
         .break-list { display: flex; flex-direction: column; gap: 10px; }
         .break-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--gray-50); border-radius: var(--radius-sm); border: 1px solid var(--gray-100); }
         .break-number { width: 32px; height: 32px; border-radius: 50%; background: var(--gray-200); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: var(--gray-600); flex-shrink: 0; }
         .break-details { flex: 1; }
         .break-title { font-weight: 600; font-size: 14px; color: var(--gray-800); }
         .break-time { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
-        @media (max-width: 480px) { .scan-main-btn { padding: 18px; font-size: 16px; } .scan-option-icon { width: 40px; height: 40px; font-size: 16px; } .scan-option-label { font-size: 11px; } }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @media (max-width: 480px) { .scan-main-btn { padding: 18px; font-size: 16px; } }
       `}</style>
     </div>
   );

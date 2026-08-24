@@ -14,13 +14,12 @@ const getTodayRange = () => {
 };
 
 // Break area coordinates: 25°14'28.90"N 51°28'31.51"E
-const BREAK_AREA_LAT = 25 + 14/60 + 28.90/3600; // 25.241361
-const BREAK_AREA_LNG = 51 + 28/60 + 31.51/3600; // 51.475419
+const BREAK_AREA_LAT = 25 + 14/60 + 28.90/3600;
+const BREAK_AREA_LNG = 51 + 28/60 + 31.51/3600;
 const MAX_DISTANCE_METERS = 10;
 
-// Haversine distance in meters
 const getDistanceMeters = (lat1, lng1, lat2, lng2) => {
-  const R = 6371000; // Earth's radius in meters
+  const R = 6371000;
   const toRad = (deg) => deg * (Math.PI / 180);
   const dLat = toRad(lat2 - lat1);
   const dLng = toRad(lng2 - lng1);
@@ -37,6 +36,33 @@ const validateGeolocation = (lat, lng) => {
     return { valid: false, message: `You are ${Math.round(distance)}m away from the break area. Must be within ${MAX_DISTANCE_METERS}m.` };
   }
   return { valid: true, distance };
+};
+
+// Auto-approve pending breaks older than 45 seconds
+const AUTO_APPROVE_SECONDS = 45;
+const autoApprovePendingBreaks = async () => {
+  try {
+    const cutoff = new Date(Date.now() - AUTO_APPROVE_SECONDS * 1000);
+    const stalePending = await Break.find({
+      status: 'pending',
+      requestedAt: { $lte: cutoff }
+    });
+
+    for (const breakRecord of stalePending) {
+      breakRecord.status = 'active';
+      breakRecord.startTime = new Date();
+      breakRecord.approvedBy = null;
+      breakRecord.approvedByName = 'Auto-Approved';
+      breakRecord.approvedAt = new Date();
+      breakRecord.approvedDuration = 15;
+      await breakRecord.save();
+    }
+
+    return stalePending.length;
+  } catch (error) {
+    console.error('Auto-approve error:', error);
+    return 0;
+  }
 };
 
 router.get('/', auth, async (req, res) => {
@@ -62,6 +88,7 @@ router.get('/', auth, async (req, res) => {
 
 router.get('/today', auth, async (req, res) => {
   try {
+    await autoApprovePendingBreaks();
     const { start, end } = getTodayRange();
     const breaks = await Break.find({ date: { $gte: start, $lt: end } }).sort({ requestedAt: -1 });
     res.json(breaks);
@@ -83,6 +110,7 @@ router.get('/my', auth, async (req, res) => {
 
 router.get('/pending', auth, async (req, res) => {
   try {
+    await autoApprovePendingBreaks();
     const { start, end } = getTodayRange();
     const pending = await Break.find({
       date: { $gte: start, $lt: end },
@@ -101,7 +129,6 @@ router.post('/request', auth, async (req, res) => {
     const userId = req.user._id;
     const { start, end } = getTodayRange();
 
-    // Geofencing check for QR mode
     if (mode === 'qr') {
       const geo = validateGeolocation(latitude, longitude);
       if (!geo.valid) {
@@ -123,7 +150,6 @@ router.post('/request', auth, async (req, res) => {
       });
     }
 
-    // Check if user already has breaks today and enforce same mode
     const allTodayBreaks = await Break.find({
       userId: userId,
       date: { $gte: start, $lt: end }
@@ -139,11 +165,10 @@ router.post('/request', auth, async (req, res) => {
       }
     }
 
-    // Mode-specific limits - each break is 15 min
     const isQr = mode === 'qr';
     const maxBreaks = isQr ? 4 : 3;
     const defaultDuration = 15;
-    const maxTotalMinutes = isQr ? 60 : 45; // 4 x 15 or 3 x 15
+    const maxTotalMinutes = isQr ? 60 : 45;
 
     const todayBreaks = await Break.find({
       userId: userId,
@@ -195,12 +220,10 @@ router.post('/approve/:id', auth, isApprover, async (req, res) => {
       return res.status(400).json({ message: 'Break request is not pending' });
     }
 
-    // Prevent self-approval
     if (breakRecord.userId.toString() === req.user._id.toString()) {
       return res.status(403).json({ message: 'You cannot approve your own break request' });
     }
 
-    // Fixed duration - every break is 15 minutes
     const fixedDuration = 15;
 
     breakRecord.status = 'active';

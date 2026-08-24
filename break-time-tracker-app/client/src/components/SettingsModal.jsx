@@ -239,9 +239,6 @@ const SettingsModal = ({ isAdmin, onClose }) => {
           .alert-warning { border-color: #7f1d1d; }
           .qr-preview { background: var(--gray-200); border-color: var(--gray-600); }
         }
-          .modal { background: var(--gray-100); }
-          .modal-header { border-bottom-color: var(--gray-700); }
-          .modal-header h3 { color: var(--gray-800); }
           .modal-tabs { border-bottom-color: var(--gray-700); }
           .modal-tab { color: var(--gray-400); }
           .modal-tab.active { background: var(--primary-light); color: var(--primary); }

@@ -191,8 +191,8 @@ const Devices = () => {
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon blue"><i className="fas fa-mobile-alt"></i></div>
-          <div className="stat-value">{devices.length}</div>
-          <div className="stat-label">Total Devices</div>
+          <div className="stat-value">{getLatestPerUser(devices).length}</div>
+          <div className="stat-label">Total Registered</div>
         </div>
         <div className="stat-card">
           <div className="stat-icon green"><i className="fas fa-check-circle"></i></div>

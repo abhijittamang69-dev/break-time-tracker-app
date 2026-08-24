@@ -153,6 +153,16 @@ const Reports = () => {
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
         @media (max-width: 480px) { .stats-grid { gap: 8px; } .stat-card { padding: 12px; } .stat-value { font-size: 18px; } }
+
+        @media (prefers-color-scheme: dark) {
+          .stat-card { background: var(--gray-800); border-color: var(--gray-700); }
+          .card { background: var(--gray-800); border-color: var(--gray-700); }
+          .card-header { border-bottom-color: var(--gray-700); }
+          .card-header h3 { color: var(--gray-200); }
+          .data-table th { border-bottom-color: var(--gray-600); color: var(--gray-400); }
+          .data-table td { border-bottom-color: var(--gray-700); color: var(--gray-200); }
+          .data-table tr:hover td { background: var(--gray-700); }
+        }
       `}</style>
     </div>
   );

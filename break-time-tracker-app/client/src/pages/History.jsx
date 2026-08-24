@@ -39,7 +39,7 @@ const History = () => {
         <div>
           {Object.entries(groupByDate(pastBreaks)).sort((a, b) => new Date(b[0]) - new Date(a[0])).map(([date, items]) => (
             <div key={date} style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{fmtDate(date)}</div>
+              <div className="date-header">{fmtDate(date)}</div>
               <div className="break-list">{items.map(b => <BreakItem key={b._id} break={b} />)}</div>
             </div>
           ))}
@@ -51,6 +51,7 @@ const History = () => {
         .tabs { display: flex; gap: 4px; background: var(--gray-100); padding: 4px; border-radius: var(--radius-sm); margin-bottom: 20px; }
         .tab { flex: 1; padding: 8px 12px; border: none; background: transparent; border-radius: 6px; font-size: 13px; font-weight: 600; color: var(--gray-500); cursor: pointer; transition: all 0.2s; font-family: inherit; }
         .tab.active { background: white; color: var(--primary); box-shadow: var(--shadow-sm); }
+        .date-header { font-size: 12px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5; margin-bottom: 8px; }
         .break-list { display: flex; flex-direction: column; gap: 10px; }
         .break-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--gray-50); border-radius: var(--radius-sm); border: 1px solid var(--gray-100); }
         .break-item.pending { background: var(--primary-light); border-color: var(--primary); }
@@ -78,6 +79,22 @@ const History = () => {
         .empty-state i { font-size: 48px; color: var(--gray-300); margin-bottom: 16px; }
         .empty-state h4 { font-size: 16px; font-weight: 600; color: var(--gray-700); margin-bottom: 4px; }
         .empty-state p { font-size: 13px; color: var(--gray-500); }
+
+        @media (prefers-color-scheme: dark) {
+          .tab.active { background: var(--gray-800); }
+          .date-header { color: var(--gray-400); }
+          .break-item { background: var(--gray-700); border-color: var(--gray-600); }
+          .break-item.pending { background: var(--primary-light); border-color: var(--primary); }
+          .break-item.active { background: var(--orange-light); border-color: var(--orange); }
+          .break-item.completed { background: var(--success-light); border-color: var(--success); }
+          .break-item.late { background: var(--warning-light); border-color: var(--warning); }
+          .break-item.rejected { background: var(--gray-700); border-color: var(--gray-600); opacity: 0.7; }
+          .break-title { color: var(--gray-200); }
+          .break-time { color: var(--gray-400); }
+          .break-duration { color: var(--gray-300); }
+          .empty-state h4 { color: var(--gray-200); }
+          .empty-state p { color: var(--gray-400); }
+        }
       `}</style>
     </div>
   );

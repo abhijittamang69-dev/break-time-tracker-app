@@ -61,7 +61,7 @@ router.post('/cleanup', auth, isAdmin, async (req, res) => {
 });
 
 // @route   POST /api/devices/register
-// @desc    Register a new device
+// @desc    Register a new device (one per non-admin user)
 // @access  Private
 router.post('/register', auth, async (req, res) => {
   try {
@@ -69,6 +69,14 @@ router.post('/register', auth, async (req, res) => {
 
     if (!deviceToken) {
       return res.status(400).json({ message: 'Device token is required' });
+    }
+
+    const currentUser = await User.findById(req.user._id);
+    const isAdminUser = currentUser && currentUser.role === 'Admin';
+
+    // For non-admin users: keep only one device. Delete old ones before creating new.
+    if (!isAdminUser) {
+      await Device.deleteMany({ userId: req.user._id });
     }
 
     // Check if device already exists

@@ -119,26 +119,7 @@ const Layout = () => {
     <div className="app-container">
       {/* Floating notification toast */}
       {showNotification && (
-        <div style={{
-          position: 'fixed',
-          top: 70,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 2000,
-          background: 'linear-gradient(135deg, #f05252 0%, #e02424 100%)',
-          color: 'white',
-          padding: '14px 24px',
-          borderRadius: 12,
-          boxShadow: '0 10px 25px rgba(240, 82, 82, 0.4)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          fontWeight: 600,
-          fontSize: 14,
-          animation: 'slideDown 0.4s ease-out',
-          maxWidth: '90vw',
-          cursor: 'pointer'
-        }} onClick={() => { setShowNotification(false); navigate('/'); }}>
+        <div className="notification-toast" onClick={() => { setShowNotification(false); navigate('/'); }}>
           <i className="fas fa-bell" style={{ fontSize: 18 }}></i>
           <span>{notificationMsg}</span>
           <i className="fas fa-times" style={{ marginLeft: 8, opacity: 0.7 }}></i>
@@ -163,23 +144,7 @@ const Layout = () => {
             >
               <i className="fas fa-bell" style={{ color: pendingCount > 0 ? 'var(--warning)' : 'var(--gray-500)' }}></i>
               {pendingCount > 0 && (
-                <span style={{
-                  position: 'absolute',
-                  top: -2,
-                  right: -2,
-                  background: 'var(--warning)',
-                  color: 'white',
-                  fontSize: 10,
-                  fontWeight: 700,
-                  width: 18,
-                  height: 18,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: '2px solid white',
-                  animation: 'pulse 2s infinite'
-                }}>{pendingCount > 9 ? '9+' : pendingCount}</span>
+                <span className="pending-badge">{pendingCount > 9 ? '9+' : pendingCount}</span>
               )}
             </button>
           )}
@@ -211,22 +176,7 @@ const Layout = () => {
             <i className={`fas ${item.icon}`}></i>
             <span>{item.label}</span>
             {item.id === 'dashboard' && isApprover && pendingCount > 0 && (
-              <span style={{
-                position: 'absolute',
-                top: 2,
-                right: '20%',
-                background: 'var(--warning)',
-                color: 'white',
-                fontSize: 9,
-                fontWeight: 700,
-                width: 16,
-                height: 16,
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '2px solid white'
-              }}>{pendingCount > 9 ? '9+' : pendingCount}</span>
+              <span className="nav-badge">{pendingCount > 9 ? '9+' : pendingCount}</span>
             )}
           </button>
         ))}
@@ -243,6 +193,26 @@ const Layout = () => {
           min-height: 100vh;
           display: flex;
           flex-direction: column;
+        }
+        .notification-toast {
+          position: fixed;
+          top: 70px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 2000;
+          background: linear-gradient(135deg, #f05252 0%, #e02424 100%);
+          color: white;
+          padding: 14px 24px;
+          border-radius: 12px;
+          box-shadow: 0 10px 25px rgba(240, 82, 82, 0.4);
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-weight: 600;
+          font-size: 14px;
+          animation: slideDown 0.4s ease-out;
+          max-width: 90vw;
+          cursor: pointer;
         }
         .app-header {
           background: white;
@@ -312,6 +282,23 @@ const Layout = () => {
           background: var(--gray-100);
           color: var(--gray-700);
         }
+        .pending-badge {
+          position: absolute;
+          top: -2px;
+          right: -2px;
+          background: var(--warning);
+          color: white;
+          font-size: 10px;
+          font-weight: 700;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid white;
+          animation: pulse 2s infinite;
+        }
         .main-content {
           padding: 20px;
           padding-bottom: 90px;
@@ -357,6 +344,34 @@ const Layout = () => {
         }
         .nav-item:hover {
           color: var(--gray-600);
+        }
+        .nav-badge {
+          position: absolute;
+          top: 2px;
+          right: 20%;
+          background: var(--warning);
+          color: white;
+          font-size: 9px;
+          font-weight: 700;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid white;
+        }
+
+        @media (prefers-color-scheme: dark) {
+          .app-header { background: var(--gray-800); border-bottom-color: var(--gray-700); }
+          .header-logo span { color: var(--gray-100); }
+          .header-btn { background: var(--gray-800); border-color: var(--gray-600); color: var(--gray-300); }
+          .header-btn:hover { background: var(--gray-700); color: var(--gray-100); }
+          .bottom-nav { background: var(--gray-800); border-top-color: var(--gray-700); box-shadow: 0 -2px 10px rgba(0,0,0,0.3); }
+          .nav-item { color: var(--gray-400); }
+          .nav-item:hover { color: var(--gray-200); }
+          .pending-badge { border-color: var(--gray-800); }
+          .nav-badge { border-color: var(--gray-800); }
         }
         @media (max-width: 480px) {
           .main-content {

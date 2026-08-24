@@ -102,6 +102,16 @@ const Login = () => {
         .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
         .alert { padding: 14px 16px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 10px; font-size: 14px; }
         .alert-warning { background: var(--warning-light); color: var(--warning); border: 1px solid #fbd5d5; }
+
+        @media (prefers-color-scheme: dark) {
+          .login-card { background: var(--gray-800); }
+          .login-logo h1 { color: var(--gray-100); }
+          .login-logo p { color: var(--gray-400); }
+          .form-group label { color: var(--gray-300); }
+          .input-wrapper input { background: var(--gray-700); border-color: var(--gray-600); color: var(--gray-100); }
+          .input-wrapper input:focus { background: var(--gray-800); }
+          .input-wrapper i { color: var(--gray-400); }
+        }
         @media (max-width: 480px) { .login-card { padding: 28px 20px; } }
       `}</style>
     </div>

@@ -89,20 +89,34 @@ const Devices = () => {
   if (!isAdmin) {
     return (
       <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-        <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'var(--warning-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+        <div className="restricted-icon">
           <i className="fas fa-lock" style={{ fontSize: 32, color: 'var(--warning)' }}></i>
         </div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--gray-900)', marginBottom: 8 }}>Access Restricted</h2>
-        <p style={{ fontSize: 14, color: 'var(--gray-500)', maxWidth: 400, margin: '0 auto' }}>Only Administrators can manage registered devices.</p>
+        <h2 className="restricted-title">Access Restricted</h2>
+        <p className="restricted-text">Only Administrators can manage registered devices.</p>
       </div>
     );
   }
 
-  const adminDevices = devices.filter(d => d.userId?.role === 'Admin');
+  // Keep only the latest device per user per status category
+  const getLatestPerUser = (deviceList) => {
+    const map = new Map();
+    deviceList.forEach(d => {
+      const uid = d.userId?._id?.toString() || d.userId?.toString();
+      if (!uid) return;
+      const existing = map.get(uid);
+      if (!existing || new Date(d.createdAt) > new Date(existing.createdAt)) {
+        map.set(uid, d);
+      }
+    });
+    return Array.from(map.values());
+  };
+
+  const adminDevices = getLatestPerUser(devices.filter(d => d.userId?.role === 'Admin'));
   const nonAdminDevices = devices.filter(d => d.userId?.role !== 'Admin');
-  const pendingDevices = nonAdminDevices.filter(d => d.status === 'pending');
-  const approvedDevices = nonAdminDevices.filter(d => d.status === 'approved');
-  const rejectedDevices = nonAdminDevices.filter(d => d.status === 'rejected');
+  const pendingDevices = getLatestPerUser(nonAdminDevices.filter(d => d.status === 'pending'));
+  const approvedDevices = getLatestPerUser(nonAdminDevices.filter(d => d.status === 'approved'));
+  const rejectedDevices = getLatestPerUser(nonAdminDevices.filter(d => d.status === 'rejected'));
 
   const DeviceTable = ({ list, showApprove, showReject, showDeactivate, showActivate, showDelete, readOnly }) => (
     <div style={{ overflowX: 'auto' }}>
@@ -278,6 +292,21 @@ const Devices = () => {
         .btn-warning { background: var(--warning); color: white; }
         .btn-danger { background: var(--warning); color: white; }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .restricted-icon { width: 80px; height: 80px; border-radius: 50%; background: var(--warning-light); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+        .restricted-title { font-size: 20px; font-weight: 700; color: var(--gray-900); margin-bottom: 8px; }
+        .restricted-text { font-size: 14px; color: var(--gray-500); max-width: 400px; margin: 0 auto; line-height: 1.6; }
+
+        @media (prefers-color-scheme: dark) {
+          .stat-card { background: var(--gray-800); border-color: var(--gray-700); }
+          .card { background: var(--gray-800); border-color: var(--gray-700); }
+          .card-header { border-bottom-color: var(--gray-700); }
+          .card-header h3 { color: var(--gray-200); }
+          .data-table th { border-bottom-color: var(--gray-600); color: var(--gray-400); }
+          .data-table td { border-bottom-color: var(--gray-700); color: var(--gray-200); }
+          .data-table tr:hover td { background: var(--gray-700); }
+          .restricted-title { color: var(--gray-100); }
+          .restricted-text { color: var(--gray-400); }
+        }
         @media (max-width: 480px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
       `}</style>
     </div>

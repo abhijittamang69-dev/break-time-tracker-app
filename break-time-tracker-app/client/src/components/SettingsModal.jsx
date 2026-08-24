@@ -174,7 +174,7 @@ const SettingsModal = ({ isAdmin, onClose }) => {
                   </button>
                 </div>
               </div>
-              <div style={{ padding: 20, background: 'var(--gray-50)', borderRadius: 12, border: '2px dashed var(--gray-300)', marginBottom: 16 }}>
+              <div className="qr-preview">
                 <img
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(settings.qrCodeValue)}`}
                   alt="Break QR Code"
@@ -196,7 +196,7 @@ const SettingsModal = ({ isAdmin, onClose }) => {
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
         .modal { background: white; border-radius: var(--radius-lg); width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
         .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; justify-content: space-between; }
-        .modal-header h3 { font-size: 18px; font-weight: 700; }
+        .modal-header h3 { font-size: 18px; font-weight: 700; color: var(--gray-900); }
         .modal-close { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--gray-100); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--gray-500); transition: all 0.2s; }
         .modal-close:hover { background: var(--gray-200); color: var(--gray-700); }
         .modal-tabs { display: flex; border-bottom: 1px solid var(--gray-100); }
@@ -219,6 +219,25 @@ const SettingsModal = ({ isAdmin, onClose }) => {
         .alert { padding: 14px 16px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 10px; font-size: 14px; }
         .alert-success { background: var(--success-light); color: var(--success); border: 1px solid #bcf0da; }
         .alert-warning { background: var(--warning-light); color: var(--warning); border: 1px solid #fbd5d5; }
+        .qr-preview { padding: 20px; background: var(--gray-50); border-radius: 12px; border: 2px dashed var(--gray-300); margin-bottom: 16px; }
+
+        @media (prefers-color-scheme: dark) {
+          .modal { background: var(--gray-800); }
+          .modal-header { border-bottom-color: var(--gray-700); }
+          .modal-header h3 { color: var(--gray-100); }
+          .modal-tabs { border-bottom-color: var(--gray-700); }
+          .modal-tab { color: var(--gray-400); }
+          .modal-tab.active { background: var(--primary-light); color: var(--primary); }
+          .modal-tab:hover { color: var(--gray-200); background: var(--gray-700); }
+          .modal-footer { border-top-color: var(--gray-700); }
+          .modal-close { background: var(--gray-700); color: var(--gray-300); }
+          .modal-close:hover { background: var(--gray-600); color: var(--gray-100); }
+          .input-wrapper input { background: var(--gray-700); border-color: var(--gray-600); color: var(--gray-100); }
+          .input-wrapper input:focus { background: var(--gray-800); }
+          .alert-success { border-color: #14532d; }
+          .alert-warning { border-color: #7f1d1d; }
+          .qr-preview { background: var(--gray-700); border-color: var(--gray-600); }
+        }
       `}</style>
     </div>
   );

@@ -71,35 +71,12 @@ const Users = () => {
   if (!isApprover) {
     return (
       <div className="animate-fade-in" style={{ textAlign: 'center', padding: '60px 20px' }}>
-        <div style={{
-          width: 80,
-          height: 80,
-          borderRadius: '50%',
-          background: 'var(--warning-light)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0 auto 24px'
-        }}>
+        <div className="restricted-icon">
           <i className="fas fa-lock" style={{ fontSize: 32, color: 'var(--warning)' }}></i>
         </div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--gray-900)', marginBottom: 8 }}>
-          Access Restricted
-        </h2>
-        <p style={{ fontSize: 14, color: 'var(--gray-500)', maxWidth: 400, margin: '0 auto 24px', lineHeight: 1.6 }}>
-          Only Supervisors, Team Leaders, Coordinators, and Administrators can access staff management.
-        </p>
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '10px 20px',
-          background: 'var(--primary-light)',
-          borderRadius: 20,
-          fontSize: 13,
-          fontWeight: 600,
-          color: 'var(--primary)'
-        }}>
+        <h2 className="restricted-title">Access Restricted</h2>
+        <p className="restricted-text">Only Supervisors, Team Leaders, Coordinators, and Administrators can access staff management.</p>
+        <div className="restricted-badge">
           <i className="fas fa-user"></i>
           Your role: {currentUser?.role}
         </div>
@@ -226,7 +203,7 @@ const Users = () => {
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
         .modal { background: white; border-radius: var(--radius-lg); width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
         .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; justify-content: space-between; }
-        .modal-header h3 { font-size: 18px; font-weight: 700; }
+        .modal-header h3 { font-size: 18px; font-weight: 700; color: var(--gray-900); }
         .modal-close { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--gray-100); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--gray-500); transition: all 0.2s; }
         .modal-close:hover { background: var(--gray-200); color: var(--gray-700); }
         .modal-body { padding: 24px; }
@@ -237,6 +214,29 @@ const Users = () => {
         .input-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray-400); font-size: 16px; }
         .input-wrapper input { width: 100%; padding: 12px 16px 12px 44px; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 15px; font-family: inherit; transition: all 0.2s; background: var(--gray-50); }
         .input-wrapper input:focus { outline: none; border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1); }
+
+        .restricted-icon { width: 80px; height: 80px; border-radius: 50%; background: var(--warning-light); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+        .restricted-title { font-size: 20px; font-weight: 700; color: var(--gray-900); margin-bottom: 8px; }
+        .restricted-text { font-size: 14px; color: var(--gray-500); max-width: 400px; margin: 0 auto 24px; line-height: 1.6; }
+        .restricted-badge { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--primary-light); border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--primary); }
+
+        @media (prefers-color-scheme: dark) {
+          .card { background: var(--gray-800); border-color: var(--gray-700); }
+          .card-header { border-bottom-color: var(--gray-700); }
+          .card-header h3 { color: var(--gray-200); }
+          .modal { background: var(--gray-800); }
+          .modal-header { border-bottom-color: var(--gray-700); }
+          .modal-header h3 { color: var(--gray-100); }
+          .modal-footer { border-top-color: var(--gray-700); }
+          .modal-close { background: var(--gray-700); color: var(--gray-300); }
+          .modal-close:hover { background: var(--gray-600); color: var(--gray-100); }
+          .header-btn { background: var(--gray-800); border-color: var(--gray-600); color: var(--gray-300); }
+          .header-btn:hover { background: var(--gray-700); color: var(--gray-100); }
+          .input-wrapper input { background: var(--gray-700); border-color: var(--gray-600); color: var(--gray-100); }
+          .input-wrapper input:focus { background: var(--gray-800); }
+          .restricted-title { color: var(--gray-100); }
+          .restricted-text { color: var(--gray-400); }
+        }
       `}</style>
     </div>
   );

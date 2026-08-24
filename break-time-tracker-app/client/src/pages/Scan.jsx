@@ -23,10 +23,7 @@ const getDistanceMeters = (lat1, lng1, lat2, lng2) => {
 const Scan = () => {
   const { user } = useAuth();
   const scannerRef = useRef(null);
-  const cameraInputRef = useRef(null);
-  const galleryInputRef = useRef(null);
   const fileInputRef = useRef(null);
-  const [showSheet, setShowSheet] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [toast, setToast] = useState(null);
   const [myActiveBreak, setMyActiveBreak] = useState(null);
@@ -113,7 +110,6 @@ const Scan = () => {
   const onScanError = () => {};
 
   const startCameraScanner = () => {
-    setShowSheet(false);
     setScanning(true);
     setTimeout(() => {
       scannerRef.current = new Html5QrcodeScanner('reader', { qrbox: { width: 250, height: 250 }, fps: 10 }, false);
@@ -131,7 +127,6 @@ const Scan = () => {
 
   const handleFileScan = async (file) => {
     if (!file) return;
-    setShowSheet(false);
     setActionLoading(true);
     try {
       const html5QrCode = new Html5Qrcode('file-reader');
@@ -149,17 +144,8 @@ const Scan = () => {
       showToast('Could not read QR code from image. Please try again.', 'error');
     } finally {
       setActionLoading(false);
-      if (cameraInputRef.current) cameraInputRef.current.value = '';
-      if (galleryInputRef.current) galleryInputRef.current.value = '';
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
-  };
-
-  // CRITICAL: call .click() synchronously within the user gesture
-  // Mobile browsers (iOS Safari, Android Chrome) block async file input clicks
-  const triggerInput = (ref) => {
-    setShowSheet(false);
-    if (ref.current) ref.current.click();
   };
 
   useEffect(() => () => {
@@ -172,9 +158,7 @@ const Scan = () => {
       <h1 className="page-title">QR Code Scanner</h1>
       <p className="page-subtitle">Scan to request or end your break</p>
 
-      {/* Hidden file inputs */}
-      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(e) => handleFileScan(e.target.files[0])} />
-      <input ref={galleryInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleFileScan(e.target.files[0])} />
+      {/* Hidden file input - triggers native browser file picker directly */}
       <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleFileScan(e.target.files[0])} />
 
       {/* File reader placeholder (needed by Html5Qrcode) */}
@@ -214,10 +198,10 @@ const Scan = () => {
                   : 'Scan QR to request a break (15 min · Up to 4 per shift)'}
               </div>
 
-              {/* Main single button */}
+              {/* Main button - directly triggers browser native file picker */}
               <button
                 className="scan-main-btn"
-                onClick={() => setShowSheet(true)}
+                onClick={() => { if (fileInputRef.current) fileInputRef.current.click(); }}
                 disabled={actionLoading}
               >
                 <i className="fas fa-qrcode" style={{ fontSize: 28 }}></i>
@@ -237,30 +221,6 @@ const Scan = () => {
           )}
         </div>
       </div>
-
-      {/* Compact Action Sheet Popup */}
-      {showSheet && (
-        <div className="sheet-overlay" onClick={() => setShowSheet(false)}>
-          <div className="sheet-popup" onClick={(e) => e.stopPropagation()}>
-            <button className="sheet-row" onClick={(e) => { e.preventDefault(); triggerInput(cameraInputRef); }}>
-              <i className="fas fa-camera sheet-row-icon"></i>
-              <span className="sheet-row-label">Take Photo</span>
-            </button>
-            <button className="sheet-row" onClick={(e) => { e.preventDefault(); triggerInput(galleryInputRef); }}>
-              <i className="fas fa-images sheet-row-icon"></i>
-              <span className="sheet-row-label">Photo Library</span>
-            </button>
-            <button className="sheet-row" onClick={(e) => { e.preventDefault(); triggerInput(fileInputRef); }}>
-              <i className="fas fa-folder-open sheet-row-icon"></i>
-              <span className="sheet-row-label">Choose File</span>
-            </button>
-            <div className="sheet-divider"></div>
-            <button className="sheet-row sheet-cancel" onClick={() => setShowSheet(false)}>
-              <span className="sheet-row-label">Cancel</span>
-            </button>
-          </div>
-        </div>
-      )}
 
       <div className="card">
         <div className="card-header"><h3><i className="fas fa-info-circle" style={{ marginRight: 8, color: 'var(--primary)' }}></i>How It Works</h3></div>
@@ -302,27 +262,12 @@ const Scan = () => {
         .location-hint { margin-top: 16px; padding: 10px; background: var(--success-light); border-radius: 8px; border: 1px solid var(--success-light); }
         .location-hint-text { font-size: 12px; color: var(--success); }
 
-        /* Compact Action Sheet */
-        .sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.15s ease; padding: 20px; }
-        .sheet-popup { background: white; border-radius: var(--radius); width: 100%; max-width: 280px; box-shadow: var(--shadow-lg); overflow: hidden; animation: scaleIn 0.2s ease; }
-        .sheet-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: none; background: none; cursor: pointer; transition: background 0.15s; font-family: inherit; text-align: left; width: 100%; }
-        .sheet-row:hover { background: var(--gray-50); }
-        .sheet-row-icon { font-size: 16px; color: var(--gray-500); width: 22px; text-align: center; }
-        .sheet-row-label { font-size: 14px; font-weight: 500; color: var(--gray-800); }
-        .sheet-divider { height: 1px; background: var(--gray-100); margin: 0 16px; }
-        .sheet-cancel { justify-content: center; padding: 12px 16px; }
-        .sheet-cancel .sheet-row-label { font-weight: 600; color: var(--gray-500); font-size: 14px; }
-
         .break-list { display: flex; flex-direction: column; gap: 10px; }
         .break-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--gray-50); border-radius: var(--radius-sm); border: 1px solid var(--gray-100); }
         .break-number { width: 32px; height: 32px; border-radius: 50%; background: var(--gray-200); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: var(--gray-600); flex-shrink: 0; }
         .break-details { flex: 1; }
         .break-title { font-weight: 600; font-size: 14px; color: var(--gray-800); }
         .break-time { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
 
         @media (prefers-color-scheme: dark) {
           .page-title { color: var(--gray-900); }
@@ -331,11 +276,6 @@ const Scan = () => {
           .card-header { border-bottom-color: var(--gray-700); }
           .card-header h3 { color: var(--gray-800); }
           .scan-main-btn:hover:not(:disabled) { background: #1e3a5f; }
-          .sheet-popup { background: var(--gray-100); }
-          .sheet-row:hover { background: var(--gray-200); }
-          .sheet-row-label { color: var(--gray-800); }
-          .sheet-divider { background: var(--gray-700); }
-          .sheet-cancel .sheet-row-label { color: var(--gray-500); }
           .break-item { background: var(--gray-200); border-color: var(--gray-600); }
           .break-title { color: var(--gray-800); }
           .break-time { color: var(--gray-500); }
@@ -344,8 +284,6 @@ const Scan = () => {
         }
         @media (max-width: 480px) {
           .scan-main-btn { padding: 18px; font-size: 16px; }
-          .sheet-overlay { align-items: flex-end; padding: 0; }
-          .sheet-popup { max-width: 100%; border-radius: var(--radius) var(--radius) 0 0; animation: slideUp 0.25s ease; }
         }
       `}</style>
     </div>

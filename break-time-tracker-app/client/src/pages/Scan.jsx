@@ -155,11 +155,11 @@ const Scan = () => {
     }
   };
 
+  // CRITICAL: call .click() synchronously within the user gesture
+  // Mobile browsers (iOS Safari, Android Chrome) block async file input clicks
   const triggerInput = (ref) => {
     setShowSheet(false);
-    setTimeout(() => {
-      if (ref.current) ref.current.click();
-    }, 10);
+    if (ref.current) ref.current.click();
   };
 
   useEffect(() => () => {
@@ -253,10 +253,6 @@ const Scan = () => {
             <button className="sheet-row" onClick={(e) => { e.preventDefault(); triggerInput(fileInputRef); }}>
               <i className="fas fa-folder-open sheet-row-icon"></i>
               <span className="sheet-row-label">Choose File</span>
-            </button>
-            <button className="sheet-row" onClick={(e) => { e.preventDefault(); triggerInput(fileInputRef); }}>
-              <i className="fab fa-google-drive sheet-row-icon"></i>
-              <span className="sheet-row-label">Google Drive</span>
             </button>
             <div className="sheet-divider"></div>
             <button className="sheet-row sheet-cancel" onClick={() => setShowSheet(false)}>

@@ -199,9 +199,9 @@ const Dashboard = () => {
                   </div>
                 </div>
               )}
-              <div style={{ marginTop: 16, padding: 14, background: '#e0f2fe', borderRadius: 8, border: '1px solid #bae6fd', display: 'flex', alignItems: 'center', gap: 10 }}>
-                <i className="fas fa-qrcode" style={{ color: '#0369a1', fontSize: 18 }}></i>
-                <span style={{ fontSize: 13, color: '#0369a1', fontWeight: 600 }}>
+              <div style={{ marginTop: 16 }} className="info-box">
+                <i className="fas fa-qrcode info-box-icon"></i>
+                <span className="info-box-text">
                   Go to the <strong>Scan</strong> page and scan the QR code to end your break.
                 </span>
               </div>
@@ -229,9 +229,9 @@ const Dashboard = () => {
                 <MiniStat value={modeMaxBreaks - breaksTaken} label="Breaks Left" />
               </div>
               {canRequestBreak ? (
-                <div style={{ padding: 14, background: '#e0f2fe', borderRadius: 8, border: '1px solid #bae6fd', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                  <i className="fas fa-qrcode" style={{ color: '#0369a1', fontSize: 18 }}></i>
-                  <span style={{ fontSize: 13, color: '#0369a1', fontWeight: 600 }}>
+                <div style={{ marginBottom: 12 }} className="info-box">
+                  <i className="fas fa-qrcode info-box-icon"></i>
+                  <span className="info-box-text">
                     Go to the <strong>Scan</strong> page and scan the QR code to request a break.
                   </span>
                 </div>
@@ -354,8 +354,8 @@ const Dashboard = () => {
         .badge-orange { background: var(--orange-light); color: var(--orange); }
         .badge-gray { background: var(--gray-100); color: var(--gray-600); }
         .mode-banner { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--radius-sm); margin-bottom: 16px; font-size: 14px; }
-        .mode-banner.qr { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-        .mode-banner.manual { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+        .mode-banner.qr { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary-light); }
+        .mode-banner.manual { background: var(--gray-100); color: var(--gray-700); border: 1px solid var(--gray-200); }
         .mode-banner i { font-size: 20px; }
         .mode-title { font-weight: 700; font-size: 14px; }
         .mode-sub { font-size: 12px; opacity: 0.8; margin-top: 2px; }
@@ -380,11 +380,26 @@ const Dashboard = () => {
         .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .alert { padding: 14px 16px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 10px; font-size: 14px; margin-bottom: 16px; }
         .alert-warning { background: var(--warning-light); color: var(--warning); border: 1px solid #fbd5d5; }
+        .info-box { padding: 14px; background: var(--primary-light); border-radius: 8px; border: 1px solid var(--primary-light); display: flex; align-items: center; gap: 10px; }
+        .info-box-icon { color: var(--primary); font-size: 18px; }
+        .info-box-text { font-size: 13px; color: var(--primary); font-weight: 600; }
         .data-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 500px; }
         .data-table th { text-align: left; padding: 12px 16px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 1px solid var(--gray-200); }
         .data-table td { padding: 12px 16px; border-bottom: 1px solid var(--gray-100); color: var(--gray-700); }
         .data-table tr:hover td { background: var(--gray-50); }
         .pulse { animation: pulse 2s ease-in-out infinite; }
+
+        @media (prefers-color-scheme: dark) {
+          .stat-card { background: var(--gray-800); border-color: var(--gray-700); }
+          .card { background: var(--gray-800); border-color: var(--gray-700); }
+          .card-header { border-bottom-color: var(--gray-700); }
+          .card-header h3 { color: var(--gray-200); }
+          .data-table th { border-bottom-color: var(--gray-600); color: var(--gray-400); }
+          .data-table td { border-bottom-color: var(--gray-700); color: var(--gray-200); }
+          .data-table tr:hover td { background: var(--gray-700); }
+          .mode-banner.manual { background: var(--gray-700); color: var(--gray-200); border-color: var(--gray-600); }
+          .alert-warning { border-color: #7f1d1d; }
+        }
         @media (max-width: 480px) { .stats-grid { gap: 8px; } .stat-card { padding: 12px; } .stat-value { font-size: 20px; } .timer-value { font-size: 36px; } }
       `}</style>
     </div>

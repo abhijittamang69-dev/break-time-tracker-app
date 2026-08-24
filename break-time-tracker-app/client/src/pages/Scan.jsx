@@ -225,8 +225,8 @@ const Scan = () => {
 
               {/* Location hint */}
               {!myActiveBreak && (
-                <div style={{ marginTop: 20, padding: 10, background: '#f0fdf4', borderRadius: 8, border: '1px solid #bbf7d0' }}>
-                  <div style={{ fontSize: 12, color: '#15803d' }}>
+                <div className="location-hint">
+                  <div className="location-hint-text">
                     <i className="fas fa-map-marker-alt" style={{ marginRight: 6 }}></i>
                     You must be within 10 meters of the break area to request a break.
                   </div>
@@ -242,24 +242,23 @@ const Scan = () => {
         <div className="sheet-overlay" onClick={() => setShowSheet(false)}>
           <div className="sheet-content" onClick={(e) => e.stopPropagation()}>
             <div className="sheet-header">
-              <div className="sheet-drag-bar"></div>
               <div className="sheet-title">Choose QR Source</div>
             </div>
             <div className="sheet-options">
               <button className="sheet-option" onClick={() => { setShowSheet(false); if (cameraInputRef.current) cameraInputRef.current.click(); }}>
-                <div className="sheet-icon" style={{ background: '#dbeafe', color: '#1a56db' }}><i className="fas fa-camera"></i></div>
+                <div className="sheet-icon sheet-icon-camera"><i className="fas fa-camera"></i></div>
                 <div className="sheet-label">Take Photo</div>
               </button>
               <button className="sheet-option" onClick={() => { setShowSheet(false); if (galleryInputRef.current) galleryInputRef.current.click(); }}>
-                <div className="sheet-icon" style={{ background: '#fce7f3', color: '#db2777' }}><i className="fas fa-images"></i></div>
+                <div className="sheet-icon sheet-icon-gallery"><i className="fas fa-images"></i></div>
                 <div className="sheet-label">Photo Library</div>
               </button>
               <button className="sheet-option" onClick={() => { setShowSheet(false); if (fileInputRef.current) fileInputRef.current.click(); }}>
-                <div className="sheet-icon" style={{ background: '#fef3c7', color: '#d97706' }}><i className="fas fa-folder-open"></i></div>
+                <div className="sheet-icon sheet-icon-file"><i className="fas fa-folder-open"></i></div>
                 <div className="sheet-label">Choose File</div>
               </button>
               <button className="sheet-option" onClick={openGoogleDrive}>
-                <div className="sheet-icon" style={{ background: '#e0e7ff', color: '#4f46e5' }}><i className="fab fa-google-drive"></i></div>
+                <div className="sheet-icon sheet-icon-drive"><i className="fab fa-google-drive"></i></div>
                 <div className="sheet-label">Google Drive</div>
               </button>
             </div>
@@ -305,19 +304,25 @@ const Scan = () => {
         .btn-secondary { background: var(--gray-100); color: var(--gray-700); border: 1px solid var(--gray-200); }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        /* Bottom Sheet */
+        .location-hint { margin-top: 16px; padding: 10px; background: var(--success-light); border-radius: 8px; border: 1px solid var(--success-light); }
+        .location-hint-text { font-size: 12px; color: var(--success); }
+
+        /* Bottom Sheet - Compact */
         .sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: flex-end; justify-content: center; animation: fadeIn 0.2s ease; }
-        .sheet-content { width: 100%; max-width: 480px; background: white; border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 12px 16px 24px; animation: slideUp 0.3s ease; }
-        .sheet-header { text-align: center; margin-bottom: 12px; }
-        .sheet-drag-bar { width: 40px; height: 4px; background: var(--gray-300); border-radius: 2px; margin: 0 auto 12px; }
-        .sheet-title { font-size: 16px; font-weight: 700; color: var(--gray-800); }
-        .sheet-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
-        .sheet-option { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--radius); border: none; background: var(--gray-50); cursor: pointer; transition: all 0.15s; font-family: inherit; text-align: left; }
+        .sheet-content { width: 100%; max-width: 400px; background: white; border-radius: var(--radius) var(--radius) 0 0; padding: 14px 16px 18px; animation: slideUp 0.25s ease; }
+        .sheet-header { text-align: center; margin-bottom: 10px; }
+        .sheet-title { font-size: 14px; font-weight: 700; color: var(--gray-800); }
+        .sheet-options { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+        .sheet-option { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-sm); border: none; background: var(--gray-50); cursor: pointer; transition: all 0.15s; font-family: inherit; text-align: left; }
         .sheet-option:hover { background: var(--gray-100); }
-        .sheet-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-        .sheet-label { font-size: 15px; font-weight: 600; color: var(--gray-800); }
-        .sheet-cancel { width: 100%; padding: 14px; border-radius: var(--radius); border: none; background: var(--gray-100); color: var(--gray-700); font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; }
+        .sheet-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+        .sheet-label { font-size: 14px; font-weight: 600; color: var(--gray-800); }
+        .sheet-cancel { width: 100%; padding: 10px; border-radius: var(--radius-sm); border: none; background: var(--gray-100); color: var(--gray-700); font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; }
         .sheet-cancel:hover { background: var(--gray-200); }
+        .sheet-icon-camera { background: var(--primary-light); color: var(--primary); }
+        .sheet-icon-gallery { background: var(--warning-light); color: var(--warning); }
+        .sheet-icon-file { background: var(--orange-light); color: var(--orange); }
+        .sheet-icon-drive { background: #e0e7ff; color: #4f46e5; }
 
         .break-list { display: flex; flex-direction: column; gap: 10px; }
         .break-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--gray-50); border-radius: var(--radius-sm); border: 1px solid var(--gray-100); }
@@ -328,6 +333,24 @@ const Scan = () => {
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        @media (prefers-color-scheme: dark) {
+          .card { background: var(--gray-800); border-color: var(--gray-700); }
+          .card-header { border-bottom-color: var(--gray-700); }
+          .card-header h3 { color: var(--gray-200); }
+          .scan-main-btn:hover:not(:disabled) { background: #1e3a5f; }
+          .sheet-content { background: var(--gray-800); }
+          .sheet-option { background: var(--gray-700); }
+          .sheet-option:hover { background: var(--gray-600); }
+          .sheet-label { color: var(--gray-100); }
+          .sheet-title { color: var(--gray-100); }
+          .sheet-cancel { background: var(--gray-700); color: var(--gray-200); }
+          .sheet-cancel:hover { background: var(--gray-600); }
+          .sheet-icon-drive { background: #312e81; color: #a5b4fc; }
+          .break-item { background: var(--gray-700); border-color: var(--gray-600); }
+          .break-title { color: var(--gray-200); }
+          .break-time { color: var(--gray-400); }
+        }
         @media (max-width: 480px) { .scan-main-btn { padding: 18px; font-size: 16px; } }
       `}</style>
     </div>

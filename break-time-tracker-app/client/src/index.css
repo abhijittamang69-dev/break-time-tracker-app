@@ -135,7 +135,3 @@ body {
     background: var(--gray-400);
   }
 }
-  .hide-mobile {
-    display: none !important;
-  }
-}

@@ -364,12 +364,22 @@ const Layout = () => {
 
         @media (prefers-color-scheme: dark) {
           .app-header { background: var(--gray-100); border-bottom-color: var(--gray-700); }
-          .header-logo span { color: var(--gray-100); }
+          .header-logo span { color: var(--gray-800); }
+          .header-btn { background: var(--gray-100); border-color: var(--gray-600); color: var(--gray-500); }
+          .header-btn:hover { background: var(--gray-200); color: var(--gray-800); }
+          .bottom-nav { background: var(--gray-100); border-top-color: var(--gray-700); box-shadow: 0 -2px 10px rgba(0,0,0,0.3); }
+          .nav-item { color: var(--gray-500); }
+          .nav-item:hover { color: var(--gray-700); }
+          .pending-badge { border-color: var(--gray-800); }
+          .nav-badge { border-color: var(--gray-800); }
+        }
+          .app-header { background: var(--gray-100); border-bottom-color: var(--gray-700); }
+          .header-logo span { color: var(--gray-800); }
           .header-btn { background: var(--gray-100); border-color: var(--gray-600); color: var(--gray-300); }
-          .header-btn:hover { background: var(--gray-200); color: var(--gray-100); }
+          .header-btn:hover { background: var(--gray-200); color: var(--gray-800); }
           .bottom-nav { background: var(--gray-100); border-top-color: var(--gray-700); box-shadow: 0 -2px 10px rgba(0,0,0,0.3); }
           .nav-item { color: var(--gray-400); }
-          .nav-item:hover { color: var(--gray-200); }
+          .nav-item:hover { color: var(--gray-700); }
           .pending-badge { border-color: var(--gray-800); }
           .nav-badge { border-color: var(--gray-800); }
         }

@@ -262,7 +262,7 @@ const Dashboard = () => {
                   const u = allUsers.find(u => u._id === b.userId || u._id?.toString() === b.userId?.toString());
                   return (
                     <tr key={b._id}>
-                      <td><strong>{u?.name || b.userName}</strong><br/><span style={{ fontSize: 11, color: 'var(--gray-400)' }}>{u?.role || b.userRole}</span></td>
+                      <td><strong>{u?.name || b.userName}</strong><br/><span style={{ fontSize: 11, color: 'var(--gray-500)' }}>{u?.role || b.userRole}</span></td>
                       <td>{b.shift}</td>
                       <td>Break {b.breakNumber}</td>
                       <td>{fmtTime(b.requestedAt)}</td>
@@ -316,7 +316,7 @@ const Dashboard = () => {
                   const isOverdue = remaining <= 0;
                   return (
                     <tr key={b._id}>
-                      <td><strong>{u?.name || b.userName}</strong><br/><span style={{ fontSize: 11, color: 'var(--gray-400)' }}>{u?.role || b.userRole}</span></td>
+                      <td><strong>{u?.name || b.userName}</strong><br/><span style={{ fontSize: 11, color: 'var(--gray-500)' }}>{u?.role || b.userRole}</span></td>
                       <td><span className="badge badge-orange">Break {b.breakNumber}</span></td>
                       <td>{fmtTime(b.startTime)}</td>
                       <td><span className={isOverdue ? 'pulse' : ''} style={{ color: isOverdue ? 'var(--warning)' : 'var(--orange)', fontWeight: 600 }}>{fmtDur(elapsed)} / {b.approvedDuration}m</span></td>
@@ -393,11 +393,26 @@ const Dashboard = () => {
           .stat-card { background: var(--gray-100); border-color: var(--gray-700); }
           .card { background: var(--gray-100); border-color: var(--gray-700); }
           .card-header { border-bottom-color: var(--gray-700); }
-          .card-header h3 { color: var(--gray-200); }
-          .data-table th { border-bottom-color: var(--gray-600); color: var(--gray-400); }
-          .data-table td { border-bottom-color: var(--gray-700); color: var(--gray-200); }
+          .card-header h3 { color: var(--gray-800); }
+          .data-table th { border-bottom-color: var(--gray-600); color: var(--gray-500); }
+          .data-table td { border-bottom-color: var(--gray-700); color: var(--gray-700); }
           .data-table tr:hover td { background: var(--gray-200); }
-          .mode-banner.manual { background: var(--gray-200); color: var(--gray-200); border-color: var(--gray-600); }
+          .mode-banner.manual { background: var(--gray-200); color: var(--gray-700); border-color: var(--gray-600); }
+          .alert-warning { background: var(--warning-light); color: var(--warning); border-color: #7f1d1d; }
+          .info-box { background: var(--primary-light); border-color: var(--primary-light); }
+          .info-box-text { color: var(--primary); }
+          .progress-header span:first-child { color: var(--gray-700); }
+          .progress-header span:last-child { color: var(--gray-500); }
+          .progress-bar { background: var(--gray-200); }
+        }
+          .stat-card { background: var(--gray-100); border-color: var(--gray-700); }
+          .card { background: var(--gray-100); border-color: var(--gray-700); }
+          .card-header { border-bottom-color: var(--gray-700); }
+          .card-header h3 { color: var(--gray-700); }
+          .data-table th { border-bottom-color: var(--gray-600); color: var(--gray-400); }
+          .data-table td { border-bottom-color: var(--gray-700); color: var(--gray-700); }
+          .data-table tr:hover td { background: var(--gray-200); }
+          .mode-banner.manual { background: var(--gray-200); color: var(--gray-700); border-color: var(--gray-600); }
           .alert-warning { border-color: #7f1d1d; }
         }
         @media (max-width: 480px) { .stats-grid { gap: 8px; } .stat-card { padding: 12px; } .stat-value { font-size: 20px; } .timer-value { font-size: 36px; } }

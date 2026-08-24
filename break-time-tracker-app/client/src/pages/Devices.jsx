@@ -126,17 +126,17 @@ const Devices = () => {
         </thead>
         <tbody>
           {list.length === 0 ? (
-            <tr><td colSpan={readOnly ? 4 : 5} style={{ textAlign: 'center', color: 'var(--gray-400)', padding: 30 }}>No devices</td></tr>
+            <tr><td colSpan={readOnly ? 4 : 5} style={{ textAlign: 'center', color: 'var(--gray-500)', padding: 30 }}>No devices</td></tr>
           ) : (
             list.map(d => (
               <tr key={d._id}>
                 <td>
                   <strong>{d.userId?.name || 'Unknown'}</strong><br/>
-                  <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>{d.userId?.username || ''} · {d.userId?.role || ''}</span>
+                  <span style={{ fontSize: 11, color: 'var(--gray-500)' }}>{d.userId?.username || ''} · {d.userId?.role || ''}</span>
                 </td>
                 <td>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{d.deviceName || 'Unknown Device'}</div>
-                  <div style={{ fontSize: 11, color: 'var(--gray-400)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.userAgent || ''}</div>
+                  <div style={{ fontSize: 11, color: 'var(--gray-500)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.userAgent || ''}</div>
                 </td>
                 <td>
                   {d.status === 'pending' && <span className="badge badge-blue"><i className="fas fa-hourglass-half" style={{ fontSize: 8 }}></i> Pending</span>}
@@ -300,12 +300,12 @@ const Devices = () => {
           .stat-card { background: var(--gray-100); border-color: var(--gray-700); }
           .card { background: var(--gray-100); border-color: var(--gray-700); }
           .card-header { border-bottom-color: var(--gray-700); }
-          .card-header h3 { color: var(--gray-200); }
-          .data-table th { border-bottom-color: var(--gray-600); color: var(--gray-400); }
-          .data-table td { border-bottom-color: var(--gray-700); color: var(--gray-200); }
+          .card-header h3 { color: var(--gray-800); }
+          .data-table th { border-bottom-color: var(--gray-600); color: var(--gray-500); }
+          .data-table td { border-bottom-color: var(--gray-700); color: var(--gray-700); }
           .data-table tr:hover td { background: var(--gray-200); }
-          .restricted-title { color: var(--gray-100); }
-          .restricted-text { color: var(--gray-400); }
+          .restricted-title { color: var(--gray-800); }
+          .restricted-text { color: var(--gray-500); }
         }
         @media (max-width: 480px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
       `}</style>

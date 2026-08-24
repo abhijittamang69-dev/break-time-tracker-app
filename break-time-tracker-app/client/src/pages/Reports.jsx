@@ -72,7 +72,7 @@ const Reports = () => {
               <tbody>
                 {report.staffStats.map(s => (
                   <tr key={s.id}>
-                    <td><strong>{s.name}</strong><br/><span style={{ fontSize: 11, color: 'var(--gray-400)' }}>{s.role}</span></td>
+                    <td><strong>{s.name}</strong><br/><span style={{ fontSize: 11, color: 'var(--gray-500)' }}>{s.role}</span></td>
                     <td>{s.shift}</td>
                     <td>{s.breaksTaken}</td>
                     <td>{fmtDur(s.totalTime)}</td>
@@ -97,7 +97,7 @@ const Reports = () => {
               <thead><tr><th>Date</th><th>Employee</th><th>Break #</th><th>Status</th><th>Requested</th><th>Started</th><th>End</th><th>Duration</th></tr></thead>
               <tbody>
                 {report.allBreaks.length === 0 ? (
-                  <tr><td colSpan="8" style={{ textAlign: 'center', color: 'var(--gray-400)', padding: 30 }}>No break records today</td></tr>
+                  <tr><td colSpan="8" style={{ textAlign: 'center', color: 'var(--gray-500)', padding: 30 }}>No break records today</td></tr>"8" style={{ textAlign: 'center', color: 'var(--gray-400)', padding: 30 }}>No break records today</td></tr>
                 ) : (
                   [...report.allBreaks].sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt)).map(b => (
                     <tr key={b._id}>
@@ -158,9 +158,17 @@ const Reports = () => {
           .stat-card { background: var(--gray-100); border-color: var(--gray-700); }
           .card { background: var(--gray-100); border-color: var(--gray-700); }
           .card-header { border-bottom-color: var(--gray-700); }
-          .card-header h3 { color: var(--gray-200); }
+          .card-header h3 { color: var(--gray-800); }
+          .data-table th { border-bottom-color: var(--gray-600); color: var(--gray-500); }
+          .data-table td { border-bottom-color: var(--gray-700); color: var(--gray-700); }
+          .data-table tr:hover td { background: var(--gray-200); }
+        }
+          .stat-card { background: var(--gray-100); border-color: var(--gray-700); }
+          .card { background: var(--gray-100); border-color: var(--gray-700); }
+          .card-header { border-bottom-color: var(--gray-700); }
+          .card-header h3 { color: var(--gray-700); }
           .data-table th { border-bottom-color: var(--gray-600); color: var(--gray-400); }
-          .data-table td { border-bottom-color: var(--gray-700); color: var(--gray-200); }
+          .data-table td { border-bottom-color: var(--gray-700); color: var(--gray-700); }
           .data-table tr:hover td { background: var(--gray-200); }
         }
       `}</style>

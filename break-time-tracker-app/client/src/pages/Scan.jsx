@@ -155,10 +155,11 @@ const Scan = () => {
     }
   };
 
-  const openGoogleDrive = () => {
+  const triggerInput = (ref) => {
     setShowSheet(false);
-    showToast('Google Drive: Please download the QR image first, then use Choose File.', 'info');
-    if (fileInputRef.current) fileInputRef.current.click();
+    setTimeout(() => {
+      if (ref.current) ref.current.click();
+    }, 10);
   };
 
   useEffect(() => () => {
@@ -241,19 +242,19 @@ const Scan = () => {
       {showSheet && (
         <div className="sheet-overlay" onClick={() => setShowSheet(false)}>
           <div className="sheet-popup" onClick={(e) => e.stopPropagation()}>
-            <button className="sheet-row" onClick={() => { setShowSheet(false); if (cameraInputRef.current) cameraInputRef.current.click(); }}>
+            <button className="sheet-row" onClick={(e) => { e.preventDefault(); triggerInput(cameraInputRef); }}>
               <i className="fas fa-camera sheet-row-icon"></i>
               <span className="sheet-row-label">Take Photo</span>
             </button>
-            <button className="sheet-row" onClick={() => { setShowSheet(false); if (galleryInputRef.current) galleryInputRef.current.click(); }}>
+            <button className="sheet-row" onClick={(e) => { e.preventDefault(); triggerInput(galleryInputRef); }}>
               <i className="fas fa-images sheet-row-icon"></i>
               <span className="sheet-row-label">Photo Library</span>
             </button>
-            <button className="sheet-row" onClick={() => { setShowSheet(false); if (fileInputRef.current) fileInputRef.current.click(); }}>
+            <button className="sheet-row" onClick={(e) => { e.preventDefault(); triggerInput(fileInputRef); }}>
               <i className="fas fa-folder-open sheet-row-icon"></i>
               <span className="sheet-row-label">Choose File</span>
             </button>
-            <button className="sheet-row" onClick={openGoogleDrive}>
+            <button className="sheet-row" onClick={(e) => { e.preventDefault(); triggerInput(fileInputRef); }}>
               <i className="fab fa-google-drive sheet-row-icon"></i>
               <span className="sheet-row-label">Google Drive</span>
             </button>
@@ -307,14 +308,14 @@ const Scan = () => {
 
         /* Compact Action Sheet */
         .sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.15s ease; padding: 20px; }
-        .sheet-popup { background: white; border-radius: var(--radius); width: 100%; max-width: 300px; box-shadow: var(--shadow-lg); overflow: hidden; animation: scaleIn 0.2s ease; }
-        .sheet-row { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border: none; background: none; cursor: pointer; transition: background 0.15s; font-family: inherit; text-align: left; width: 100%; }
+        .sheet-popup { background: white; border-radius: var(--radius); width: 100%; max-width: 280px; box-shadow: var(--shadow-lg); overflow: hidden; animation: scaleIn 0.2s ease; }
+        .sheet-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: none; background: none; cursor: pointer; transition: background 0.15s; font-family: inherit; text-align: left; width: 100%; }
         .sheet-row:hover { background: var(--gray-50); }
-        .sheet-row-icon { font-size: 18px; color: var(--gray-500); width: 24px; text-align: center; }
-        .sheet-row-label { font-size: 15px; font-weight: 500; color: var(--gray-800); }
-        .sheet-divider { height: 1px; background: var(--gray-100); margin: 0 18px; }
-        .sheet-cancel { justify-content: center; }
-        .sheet-cancel .sheet-row-label { font-weight: 600; color: var(--gray-600); }
+        .sheet-row-icon { font-size: 16px; color: var(--gray-500); width: 22px; text-align: center; }
+        .sheet-row-label { font-size: 14px; font-weight: 500; color: var(--gray-800); }
+        .sheet-divider { height: 1px; background: var(--gray-100); margin: 0 16px; }
+        .sheet-cancel { justify-content: center; padding: 12px 16px; }
+        .sheet-cancel .sheet-row-label { font-weight: 600; color: var(--gray-500); font-size: 14px; }
 
         .break-list { display: flex; flex-direction: column; gap: 10px; }
         .break-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--gray-50); border-radius: var(--radius-sm); border: 1px solid var(--gray-100); }
@@ -325,22 +326,31 @@ const Scan = () => {
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
 
         @media (prefers-color-scheme: dark) {
-          .card { background: var(--gray-100); border-color: var(--gray-200); }
-          .card-header { border-bottom-color: var(--gray-200); }
+          .page-title { color: var(--gray-900); }
+          .page-subtitle { color: var(--gray-500); }
+          .card { background: var(--gray-100); border-color: var(--gray-700); }
+          .card-header { border-bottom-color: var(--gray-700); }
           .card-header h3 { color: var(--gray-800); }
           .scan-main-btn:hover:not(:disabled) { background: #1e3a5f; }
           .sheet-popup { background: var(--gray-100); }
           .sheet-row:hover { background: var(--gray-200); }
           .sheet-row-label { color: var(--gray-800); }
-          .sheet-divider { background: var(--gray-200); }
+          .sheet-divider { background: var(--gray-700); }
           .sheet-cancel .sheet-row-label { color: var(--gray-500); }
-          .break-item { background: var(--gray-200); border-color: var(--gray-300); }
+          .break-item { background: var(--gray-200); border-color: var(--gray-600); }
           .break-title { color: var(--gray-800); }
           .break-time { color: var(--gray-500); }
+          .break-number { background: var(--gray-300); color: var(--gray-700); }
+          .location-hint-text { color: var(--success); }
         }
-        @media (max-width: 480px) { .scan-main-btn { padding: 18px; font-size: 16px; } }
+        @media (max-width: 480px) {
+          .scan-main-btn { padding: 18px; font-size: 16px; }
+          .sheet-overlay { align-items: flex-end; padding: 0; }
+          .sheet-popup { max-width: 100%; border-radius: var(--radius) var(--radius) 0 0; animation: slideUp 0.25s ease; }
+        }
       `}</style>
     </div>
   );

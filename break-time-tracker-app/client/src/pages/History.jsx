@@ -82,6 +82,21 @@ const History = () => {
 
         @media (prefers-color-scheme: dark) {
           .tab.active { background: var(--gray-100); }
+          .date-header { color: var(--gray-500); }
+          .break-item { background: var(--gray-200); border-color: var(--gray-600); }
+          .break-item.pending { background: var(--primary-light); border-color: var(--primary); }
+          .break-item.active { background: var(--orange-light); border-color: var(--orange); }
+          .break-item.completed { background: var(--success-light); border-color: var(--success); }
+          .break-item.late { background: var(--warning-light); border-color: var(--warning); }
+          .break-item.rejected { background: var(--gray-200); border-color: var(--gray-600); opacity: 0.7; }
+          .break-title { color: var(--gray-800); }
+          .break-time { color: var(--gray-500); }
+          .break-duration { color: var(--gray-500); }
+          .empty-state i { color: var(--gray-500); }
+          .empty-state h4 { color: var(--gray-700); }
+          .empty-state p { color: var(--gray-500); }
+        }
+          .tab.active { background: var(--gray-100); }
           .date-header { color: var(--gray-400); }
           .break-item { background: var(--gray-200); border-color: var(--gray-600); }
           .break-item.pending { background: var(--primary-light); border-color: var(--primary); }
@@ -89,10 +104,10 @@ const History = () => {
           .break-item.completed { background: var(--success-light); border-color: var(--success); }
           .break-item.late { background: var(--warning-light); border-color: var(--warning); }
           .break-item.rejected { background: var(--gray-200); border-color: var(--gray-600); opacity: 0.7; }
-          .break-title { color: var(--gray-200); }
+          .break-title { color: var(--gray-700); }
           .break-time { color: var(--gray-400); }
           .break-duration { color: var(--gray-300); }
-          .empty-state h4 { color: var(--gray-200); }
+          .empty-state h4 { color: var(--gray-700); }
           .empty-state p { color: var(--gray-400); }
         }
       `}</style>

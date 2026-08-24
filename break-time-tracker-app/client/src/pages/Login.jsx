@@ -105,10 +105,18 @@ const Login = () => {
 
         @media (prefers-color-scheme: dark) {
           .login-card { background: var(--gray-100); }
-          .login-logo h1 { color: var(--gray-100); }
+          .login-logo h1 { color: var(--gray-800); }
+          .login-logo p { color: var(--gray-400); }
+          .form-group label { color: var(--gray-500); }
+          .input-wrapper input { background: var(--gray-200); border-color: var(--gray-600); color: var(--gray-800); }
+          .input-wrapper input:focus { background: var(--gray-100); }
+          .input-wrapper i { color: var(--gray-500); }
+        }
+          .login-card { background: var(--gray-100); }
+          .login-logo h1 { color: var(--gray-800); }
           .login-logo p { color: var(--gray-400); }
           .form-group label { color: var(--gray-300); }
-          .input-wrapper input { background: var(--gray-200); border-color: var(--gray-600); color: var(--gray-100); }
+          .input-wrapper input { background: var(--gray-200); border-color: var(--gray-600); color: var(--gray-800); }
           .input-wrapper input:focus { background: var(--gray-100); }
           .input-wrapper i { color: var(--gray-400); }
         }

@@ -128,6 +128,27 @@ body {
     color: var(--gray-800);
   }
 
+  input, select, textarea {
+    background: var(--gray-200);
+    border-color: var(--gray-600);
+    color: var(--gray-800);
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: var(--gray-500);
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--gray-100);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--gray-400);
+  }
+}
+    background: #0b1120;
+    color: var(--gray-800);
+  }
+
   ::-webkit-scrollbar-track {
     background: var(--gray-100);
   }

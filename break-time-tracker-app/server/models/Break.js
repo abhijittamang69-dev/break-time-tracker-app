@@ -72,6 +72,14 @@ const breakSchema = new mongoose.Schema({
     type: String,
     enum: ['qr', 'manual'],
     default: 'manual'
+  },
+  latitude: {
+    type: Number,
+    default: null
+  },
+  longitude: {
+    type: Number,
+    default: null
   }
 });
 

@@ -193,4 +193,22 @@ router.post('/activate/:id', auth, isAdmin, async (req, res) => {
   }
 });
 
+// @route   DELETE /api/devices/:id
+// @desc    Permanently delete a device (admin only)
+// @access  Private (Admin only)
+router.delete('/:id', auth, isAdmin, async (req, res) => {
+  try {
+    const device = await Device.findById(req.params.id);
+    if (!device) {
+      return res.status(404).json({ message: 'Device not found' });
+    }
+
+    await Device.deleteOne({ _id: req.params.id });
+    res.json({ message: 'Device deleted successfully' });
+  } catch (error) {
+    console.error('Delete device error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;

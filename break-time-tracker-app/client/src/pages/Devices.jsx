@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAllDevices, approveDevice, rejectDevice, deactivateDevice, activateDevice, cleanupDevices } from '../api/devices';
+import { getAllDevices, approveDevice, rejectDevice, deactivateDevice, activateDevice, deleteDevice } from '../api/devices';
 import { useAuth } from '../context/AuthContext';
 import Toast from '../components/Toast';
 
@@ -71,16 +71,16 @@ const Devices = () => {
     } finally { setActionId(null); }
   };
 
-  const handleCleanup = async () => {
-    if (!window.confirm('This will delete ALL old/legacy devices and all non-admin registered devices. Users will need to re-register their devices. Are you sure?')) return;
-    setLoading(true);
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to permanently delete this device? This action cannot be undone.')) return;
+    setActionId(id);
     try {
-      const res = await cleanupDevices();
-      showToast(`Cleanup done. ${res.data.legacyDeleted + res.data.userDevicesDeleted} devices removed.`, 'success');
+      await deleteDevice(id);
+      showToast('Device deleted successfully', 'success');
       fetchDevices();
     } catch (err) {
-      showToast(err.response?.data?.message || 'Cleanup failed', 'error');
-      setLoading(false);
+      showToast(err.response?.data?.message || 'Failed to delete device', 'error');
+      setActionId(null);
     }
   };
 
@@ -104,7 +104,7 @@ const Devices = () => {
   const approvedDevices = nonAdminDevices.filter(d => d.status === 'approved');
   const rejectedDevices = nonAdminDevices.filter(d => d.status === 'rejected');
 
-  const DeviceTable = ({ list, showApprove, showReject, showDeactivate, showActivate, readOnly }) => (
+  const DeviceTable = ({ list, showApprove, showReject, showDeactivate, showActivate, showDelete, readOnly }) => (
     <div style={{ overflowX: 'auto' }}>
       <table className="data-table">
         <thead>
@@ -139,18 +139,23 @@ const Devices = () => {
                       </button>
                     )}
                     {showReject && (
-                      <button className="btn btn-warning" onClick={() => handleReject(d._id)} disabled={actionId === d._id} style={{ width: 'auto', padding: '8px 12px', fontSize: 12 }}>
+                      <button className="btn btn-warning" onClick={() => handleReject(d._id)} disabled={actionId === d._id} style={{ width: 'auto', padding: '8px 12px', fontSize: 12, marginRight: 6 }}>
                         {actionId === d._id ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-times"></i>} Reject
                       </button>
                     )}
                     {showDeactivate && d.isActive && (
-                      <button className="btn btn-warning" onClick={() => handleDeactivate(d._id)} disabled={actionId === d._id} style={{ width: 'auto', padding: '8px 12px', fontSize: 12 }}>
+                      <button className="btn btn-warning" onClick={() => handleDeactivate(d._id)} disabled={actionId === d._id} style={{ width: 'auto', padding: '8px 12px', fontSize: 12, marginRight: 6 }}>
                         {actionId === d._id ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-ban"></i>} Deactivate
                       </button>
                     )}
                     {showActivate && !d.isActive && (
-                      <button className="btn btn-success" onClick={() => handleActivate(d._id)} disabled={actionId === d._id} style={{ width: 'auto', padding: '8px 12px', fontSize: 12 }}>
+                      <button className="btn btn-success" onClick={() => handleActivate(d._id)} disabled={actionId === d._id} style={{ width: 'auto', padding: '8px 12px', fontSize: 12, marginRight: 6 }}>
                         {actionId === d._id ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-check"></i>} Activate
+                      </button>
+                    )}
+                    {showDelete && (
+                      <button className="btn btn-danger" onClick={() => handleDelete(d._id)} disabled={actionId === d._id} style={{ width: 'auto', padding: '8px 12px', fontSize: 12 }}>
+                        {actionId === d._id ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-trash-alt"></i>} Delete
                       </button>
                     )}
                   </td>
@@ -168,12 +173,6 @@ const Devices = () => {
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       <h1 className="page-title">Device Management</h1>
       <p className="page-subtitle">Approve, reject, and manage registered devices</p>
-
-      <div style={{ marginBottom: 20 }}>
-        <button className="btn btn-warning" onClick={handleCleanup} style={{ width: 'auto', padding: '10px 18px', fontSize: 13 }}>
-          <i className="fas fa-trash-alt"></i> Clear Old Device Data
-        </button>
-      </div>
 
       <div className="stats-grid">
         <div className="stat-card">
@@ -206,7 +205,7 @@ const Devices = () => {
             <span className="badge badge-blue">{pendingDevices.length} pending</span>
           </div>
           <div className="card-body" style={{ padding: 0 }}>
-            <DeviceTable list={pendingDevices} showApprove showReject />
+            <DeviceTable list={pendingDevices} showApprove showReject showDelete />
           </div>
         </div>
       )}
@@ -218,7 +217,7 @@ const Devices = () => {
           <span className="badge badge-success">{approvedDevices.length} approved</span>
         </div>
         <div className="card-body" style={{ padding: 0 }}>
-          <DeviceTable list={approvedDevices} showDeactivate showActivate />
+          <DeviceTable list={approvedDevices} showDeactivate showActivate showDelete />
         </div>
       </div>
 
@@ -230,7 +229,7 @@ const Devices = () => {
             <span className="badge badge-gray">{rejectedDevices.length} rejected</span>
           </div>
           <div className="card-body" style={{ padding: 0 }}>
-            <DeviceTable list={rejectedDevices} showActivate />
+            <DeviceTable list={rejectedDevices} showActivate showDelete />
           </div>
         </div>
       )}
@@ -277,6 +276,7 @@ const Devices = () => {
         .btn { padding: 14px; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-success { background: var(--success); color: white; }
         .btn-warning { background: var(--warning); color: white; }
+        .btn-danger { background: var(--warning); color: white; }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         @media (max-width: 480px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
       `}</style>

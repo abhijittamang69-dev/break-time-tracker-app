@@ -13,6 +13,32 @@ const getTodayRange = () => {
   return { start, end };
 };
 
+// Break area coordinates: 25°14'28.90"N 51°28'31.51"E
+const BREAK_AREA_LAT = 25 + 14/60 + 28.90/3600; // 25.241361
+const BREAK_AREA_LNG = 51 + 28/60 + 31.51/3600; // 51.475419
+const MAX_DISTANCE_METERS = 10;
+
+// Haversine distance in meters
+const getDistanceMeters = (lat1, lng1, lat2, lng2) => {
+  const R = 6371000; // Earth's radius in meters
+  const toRad = (deg) => deg * (Math.PI / 180);
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+const validateGeolocation = (lat, lng) => {
+  if (lat == null || lng == null) return { valid: false, message: 'Location required. Please enable GPS.' };
+  const distance = getDistanceMeters(lat, lng, BREAK_AREA_LAT, BREAK_AREA_LNG);
+  if (distance > MAX_DISTANCE_METERS) {
+    return { valid: false, message: `You are ${Math.round(distance)}m away from the break area. Must be within ${MAX_DISTANCE_METERS}m.` };
+  }
+  return { valid: true, distance };
+};
+
 router.get('/', auth, async (req, res) => {
   try {
     const { userId, date, status, limit = 200 } = req.query;
@@ -71,9 +97,17 @@ router.get('/pending', auth, async (req, res) => {
 
 router.post('/request', auth, async (req, res) => {
   try {
-    const { breakNumber, requestedDuration, mode } = req.body;
+    const { breakNumber, requestedDuration, mode, latitude, longitude } = req.body;
     const userId = req.user._id;
     const { start, end } = getTodayRange();
+
+    // Geofencing check for QR mode
+    if (mode === 'qr') {
+      const geo = validateGeolocation(latitude, longitude);
+      if (!geo.valid) {
+        return res.status(403).json({ message: geo.message });
+      }
+    }
 
     const existingBreak = await Break.findOne({
       userId: userId,
@@ -137,7 +171,9 @@ router.post('/request', auth, async (req, res) => {
       status: 'pending',
       requestedAt: now,
       approvedDuration: requestedDuration || defaultDuration,
-      mode: mode || 'manual'
+      mode: mode || 'manual',
+      latitude: latitude || null,
+      longitude: longitude || null
     });
 
     await newBreak.save();
@@ -157,6 +193,11 @@ router.post('/approve/:id', auth, isApprover, async (req, res) => {
     }
     if (breakRecord.status !== 'pending') {
       return res.status(400).json({ message: 'Break request is not pending' });
+    }
+
+    // Prevent self-approval
+    if (breakRecord.userId.toString() === req.user._id.toString()) {
+      return res.status(403).json({ message: 'You cannot approve your own break request' });
     }
 
     // Fixed duration - every break is 15 minutes

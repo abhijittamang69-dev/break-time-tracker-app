@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getTodayBreaks, requestBreak, endBreak, getPendingBreaks, approveBreak, rejectBreak } from '../api/breaks';
+import { getTodayBreaks, getPendingBreaks, approveBreak, rejectBreak } from '../api/breaks';
 import { getUsers } from '../api/users';
 import { getSettings } from '../api/settings';
 import Toast from '../components/Toast';
@@ -13,7 +13,6 @@ const Dashboard = () => {
   const [settings, setSettings] = useState({ maxBreakMinutes: 60, maxBreaksPerShift: 3, defaultBreakDuration: 15, reminderMinutesBeforeEnd: 5 });
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
-  const [actionLoading, setActionLoading] = useState(false);
   const [approvingId, setApprovingId] = useState(null);
   const [liveTimer, setLiveTimer] = useState('00:00:00');
   const [reminderShown, setReminderShown] = useState(false);
@@ -45,21 +44,19 @@ const Dashboard = () => {
   const myActive = myBreaks.find(b => b.status === 'active');
   const myPending = myBreaks.find(b => b.status === 'pending');
 
-  // Determine current mode and apply mode-specific limits
   const currentMode = myBreaks.length > 0 ? myBreaks[0].mode : null;
   const isQrLocked = currentMode === 'qr';
 
   const modeMaxBreaks = isQrLocked ? 4 : 3;
-  const modeDefaultDuration = 15; // each break is 15 minutes
-  const modeMaxMinutes = isQrLocked ? 60 : 45; // 4x15 or 3x15 total shift minutes
+  const modeDefaultDuration = 15;
+  const modeMaxMinutes = isQrLocked ? 60 : 45;
 
   const myTotalUsed = myCompleted.reduce((sum, b) => sum + (b.duration || 0), 0);
   const remainingMinutes = Math.max(0, modeMaxMinutes - Math.floor(myTotalUsed / 60));
   const usedPercent = Math.min(100, (myTotalUsed / (modeMaxMinutes * 60)) * 100);
   const breaksTaken = myCompleted.length;
-  const canRequestBreak = !isQrLocked && breaksTaken < modeMaxBreaks && remainingMinutes > 0 && !myActive && !myPending;
+  const canRequestBreak = breaksTaken < modeMaxBreaks && remainingMinutes > 0 && !myActive && !myPending;
 
-  // Live timer for active break + 5-min reminder
   useEffect(() => {
     if (!myActive || !myActive.startTime || !myActive.approvedDuration) return;
     const interval = setInterval(() => {
@@ -67,7 +64,6 @@ const Dashboard = () => {
       const totalSeconds = myActive.approvedDuration * 60;
       const remaining = totalSeconds - elapsed;
       setLiveTimer(fmtDur(elapsed));
-      // 5-minute reminder
       if (remaining > 0 && remaining <= settings.reminderMinutesBeforeEnd * 60 && !reminderShown) {
         setReminderShown(true);
         showToast(`⚠️ Your break ends in ${settings.reminderMinutesBeforeEnd} minutes! Please return soon.`, 'error');
@@ -80,38 +76,14 @@ const Dashboard = () => {
     return () => clearInterval(interval);
   }, [myActive, settings.reminderMinutesBeforeEnd, reminderShown]);
 
-  // Reset reminder when active break changes
   useEffect(() => { setReminderShown(false); }, [myActive?._id]);
 
   const showToast = (message, type) => setToast({ message, type });
 
-  const handleRequestBreak = async () => {
-    setActionLoading(true);
-    try {
-      await requestBreak(breaksTaken + 1, modeDefaultDuration, 'manual');
-      showToast('Break requested! Waiting for supervisor approval.', 'success');
-      fetchData();
-    } catch (err) {
-      showToast(err.response?.data?.message || 'Failed to request break', 'error');
-    } finally { setActionLoading(false); }
-  };
-
-  const handleEndBreak = async () => {
-    if (!myActive) return;
-    setActionLoading(true);
-    try {
-      await endBreak(myActive._id);
-      showToast('Break ended successfully!', 'success');
-      fetchData();
-    } catch (err) {
-      showToast(err.response?.data?.message || 'Failed to end break', 'error');
-    } finally { setActionLoading(false); }
-  };
-
   const handleApprove = async (id) => {
     setApprovingId(id);
     try {
-      await approveBreak(id, 0); // backend ignores duration, uses mode-fixed value
+      await approveBreak(id, 0);
       showToast('Break approved! Operator can now take their break.', 'success');
       fetchData();
     } catch (err) {
@@ -175,13 +147,9 @@ const Dashboard = () => {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
-              width: 40,
-              height: 40,
-              borderRadius: '50%',
+              width: 40, height: 40, borderRadius: '50%',
               background: 'rgba(255,255,255,0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
               <i className="fas fa-bell" style={{ fontSize: 18 }}></i>
             </div>
@@ -207,7 +175,6 @@ const Dashboard = () => {
            <span className="badge badge-success"><i className="fas fa-check"></i> Available</span>}
         </div>
         <div className="card-body">
-          {/* Mode indicator banner */}
           {currentMode && (
             <div className={`mode-banner ${currentMode}`}>
               <i className={`fas ${currentMode === 'qr' ? 'fa-qrcode' : 'fa-hand-pointer'}`}></i>
@@ -232,35 +199,26 @@ const Dashboard = () => {
                   </div>
                 </div>
               )}
-              <button className="btn btn-warning" onClick={handleEndBreak} disabled={actionLoading} style={{ marginTop: 10 }}>
-                {actionLoading ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-stop-circle"></i>} End Break
-              </button>
-            </>
-          ) : myPending ? (
-            <>
-              <div style={{ textAlign: 'center', padding: 30 }}>
-                <i className="fas fa-hourglass-half" style={{ fontSize: 48, color: 'var(--gray-400)', marginBottom: 16 }}></i>
-                <h4 style={{ fontSize: 18, color: 'var(--gray-800)', marginBottom: 8 }}>Break Request Pending</h4>
-                <p style={{ color: 'var(--gray-500)', fontSize: 14 }}>Your supervisor will review and approve your break request shortly.</p>
-                <div style={{ marginTop: 16, padding: 12, background: 'var(--primary-light)', borderRadius: 8 }}>
-                  <span style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600 }}>
-                    <i className="fas fa-clock" style={{ marginRight: 6 }}></i> Requested at {fmtTime(myPending.requestedAt)}
-                  </span>
-                </div>
+              <div style={{ marginTop: 16, padding: 14, background: '#e0f2fe', borderRadius: 8, border: '1px solid #bae6fd', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <i className="fas fa-qrcode" style={{ color: '#0369a1', fontSize: 18 }}></i>
+                <span style={{ fontSize: 13, color: '#0369a1', fontWeight: 600 }}>
+                  Go to the <strong>Scan</strong> page and scan the QR code to end your break.
+                </span>
               </div>
             </>
+          ) : myPending ? (
+            <div style={{ textAlign: 'center', padding: 30 }}>
+              <i className="fas fa-hourglass-half" style={{ fontSize: 48, color: 'var(--gray-400)', marginBottom: 16 }}></i>
+              <h4 style={{ fontSize: 18, color: 'var(--gray-800)', marginBottom: 8 }}>Break Request Pending</h4>
+              <p style={{ color: 'var(--gray-500)', fontSize: 14 }}>Your supervisor will review and approve your break request shortly.</p>
+              <div style={{ marginTop: 16, padding: 12, background: 'var(--primary-light)', borderRadius: 8 }}>
+                <span style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600 }}>
+                  <i className="fas fa-clock" style={{ marginRight: 6 }}></i> Requested at {fmtTime(myPending.requestedAt)}
+                </span>
+              </div>
+            </div>
           ) : (
             <>
-              {/* Mode lock warning for QR users */}
-              {isQrLocked && (
-                <div style={{ padding: 14, background: 'var(--warning-light)', borderRadius: 8, border: '1px solid #fbd5d5', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <i className="fas fa-lock" style={{ color: 'var(--warning)' }}></i>
-                  <span style={{ fontSize: 13, color: 'var(--warning)', fontWeight: 600 }}>
-                    You are using QR Code mode this shift. Please use the Scan page to request breaks.
-                  </span>
-                </div>
-              )}
-
               <div className="progress-container">
                 <div className="progress-header"><span>Break Time Used</span><span>{fmtDur(myTotalUsed)} / {modeMaxMinutes} min</span></div>
                 <div className="progress-bar"><div className={`progress-fill ${usedPercent > 80 ? 'red' : usedPercent > 50 ? 'orange' : 'green'}`} style={{ width: `${usedPercent}%` }}></div></div>
@@ -271,13 +229,16 @@ const Dashboard = () => {
                 <MiniStat value={modeMaxBreaks - breaksTaken} label="Breaks Left" />
               </div>
               {canRequestBreak ? (
-                <button className="btn btn-success" onClick={handleRequestBreak} disabled={actionLoading}>
-                  {actionLoading ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-paper-plane"></i>} Request Break
-                </button>
+                <div style={{ padding: 14, background: '#e0f2fe', borderRadius: 8, border: '1px solid #bae6fd', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <i className="fas fa-qrcode" style={{ color: '#0369a1', fontSize: 18 }}></i>
+                  <span style={{ fontSize: 13, color: '#0369a1', fontWeight: 600 }}>
+                    Go to the <strong>Scan</strong> page and scan the QR code to request a break.
+                  </span>
+                </div>
               ) : (
                 <div className="alert alert-warning">
                   <i className="fas fa-exclamation-circle"></i>
-                  {myPending ? ' Your break request is pending approval.' : isQrLocked ? ' You are using QR Code mode this shift.' : remainingMinutes <= 0 ? ' You have used all your break time.' : ' Maximum breaks reached.'}
+                  {remainingMinutes <= 0 ? ' You have used all your break time.' : ' Maximum breaks reached.'}
                 </div>
               )}
             </>
@@ -285,7 +246,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Pending Approvals - Only for Supervisors/Team Leaders/Coordinators */}
+      {/* Pending Approvals */}
       {isApprover && pendingBreaks.length > 0 && (
         <div className="card">
           <div className="card-header">
@@ -329,7 +290,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Currently On Break - Visible to ALL users */}
+      {/* Currently On Break */}
       <div className="card">
         <div className="card-header">
           <h3><i className="fas fa-coffee" style={{ marginRight: 8, color: 'var(--orange)' }}></i>Currently On Break</h3>

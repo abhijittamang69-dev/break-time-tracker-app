@@ -28,9 +28,6 @@ router.put('/', auth, isAdmin, async (req, res) => {
     if (maxBreaksPerShift !== undefined) settings.maxBreaksPerShift = maxBreaksPerShift;
     if (qrCodeValue !== undefined) settings.qrCodeValue = qrCodeValue;
     if (qrGeneratedAt !== undefined) settings.qrGeneratedAt = qrGeneratedAt;
-    if (maxBreakMinutes !== undefined) settings.maxBreakMinutes = maxBreakMinutes;
-    if (maxBreaksPerShift !== undefined) settings.maxBreaksPerShift = maxBreaksPerShift;
-    if (qrCodeValue !== undefined) settings.qrCodeValue = qrCodeValue;
     if (lateThresholdMinutes !== undefined) settings.lateThresholdMinutes = lateThresholdMinutes;
     if (defaultBreakDuration !== undefined) settings.defaultBreakDuration = defaultBreakDuration;
     if (reminderMinutesBeforeEnd !== undefined) settings.reminderMinutesBeforeEnd = reminderMinutesBeforeEnd;

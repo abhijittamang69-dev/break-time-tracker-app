@@ -24,12 +24,11 @@ const Scan = () => {
   const { user } = useAuth();
   const scannerRef = useRef(null);
   const fileInputRef = useRef(null);
-  const [scanMode, setScanMode] = useState(null); // null | 'camera' | 'gallery' | 'file'
+  const [showOptions, setShowOptions] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [toast, setToast] = useState(null);
   const [myActiveBreak, setMyActiveBreak] = useState(null);
   const [myPendingBreak, setMyPendingBreak] = useState(null);
-  const [myMode, setMyMode] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
 
@@ -41,7 +40,6 @@ const Scan = () => {
       const myBreaks = res.data.filter(b => b.userId === user?.id || b.userId?._id === user?.id);
       setMyActiveBreak(myBreaks.find(b => b.status === 'active') || null);
       setMyPendingBreak(myBreaks.find(b => b.status === 'pending') || null);
-      setMyMode(myBreaks.length > 0 ? myBreaks[0].mode : null);
     } catch (err) { console.error(err); }
   }, [user]);
 
@@ -102,7 +100,6 @@ const Scan = () => {
 
   const onScanSuccess = async () => {
     stopScanner();
-    // For ending break, no location needed. For requesting, need location.
     if (myActiveBreak) {
       await handleBreakAction();
     } else {
@@ -114,7 +111,7 @@ const Scan = () => {
   const onScanError = () => {};
 
   const startCameraScanner = () => {
-    setScanMode('camera');
+    setShowOptions(false);
     setScanning(true);
     setTimeout(() => {
       scannerRef.current = new Html5QrcodeScanner('reader', { qrbox: { width: 250, height: 250 }, fps: 10 }, false);
@@ -128,11 +125,11 @@ const Scan = () => {
       scannerRef.current = null;
     }
     setScanning(false);
-    setScanMode(null);
   };
 
   const handleFileScan = async (file) => {
     if (!file) return;
+    setShowOptions(false);
     setActionLoading(true);
     try {
       const html5QrCode = new Html5Qrcode('file-reader');
@@ -150,12 +147,12 @@ const Scan = () => {
       showToast('Could not read QR code from image. Please try again.', 'error');
     } finally {
       setActionLoading(false);
-      setScanMode(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
-  const openGallery = () => {
+  const openFilePicker = () => {
+    setShowOptions(false);
     if (fileInputRef.current) fileInputRef.current.click();
   };
 
@@ -183,7 +180,7 @@ const Scan = () => {
 
       <div className="card">
         <div className="card-body" style={{ textAlign: 'center' }}>
-          {scanning && scanMode === 'camera' ? (
+          {scanning ? (
             <div>
               <div id="reader" style={{ width: '100%', maxWidth: 400, margin: '0 auto' }}></div>
               <button className="btn btn-secondary" onClick={stopScanner} style={{ marginTop: 16, width: 'auto', padding: '10px 24px' }}>
@@ -203,6 +200,41 @@ const Scan = () => {
               <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--primary)', marginBottom: 4 }}>Break Request Pending</div>
               <div style={{ fontSize: 13, color: 'var(--gray-600)' }}>Waiting for supervisor approval...</div>
             </div>
+          ) : showOptions ? (
+            /* Modal / Overlay with Camera, Gallery, File options */
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--gray-800)', marginBottom: 20 }}>
+                <i className="fas fa-qrcode" style={{ marginRight: 8, color: 'var(--primary)' }}></i>
+                Choose QR Scan Method
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, maxWidth: 400, margin: '0 auto 20px' }}>
+                <button className="scan-option-btn" onClick={startCameraScanner} disabled={actionLoading}>
+                  <div className="scan-option-icon" style={{ background: '#dbeafe', color: '#1a56db' }}>
+                    <i className="fas fa-camera"></i>
+                  </div>
+                  <div className="scan-option-label">Camera</div>
+                </button>
+
+                <button className="scan-option-btn" onClick={openFilePicker} disabled={actionLoading}>
+                  <div className="scan-option-icon" style={{ background: '#d1fae5', color: '#0e9f6e' }}>
+                    <i className="fas fa-images"></i>
+                  </div>
+                  <div className="scan-option-label">Gallery</div>
+                </button>
+
+                <button className="scan-option-btn" onClick={openFilePicker} disabled={actionLoading}>
+                  <div className="scan-option-icon" style={{ background: '#fef3c7', color: '#d97706' }}>
+                    <i className="fas fa-folder-open"></i>
+                  </div>
+                  <div className="scan-option-label">File</div>
+                </button>
+              </div>
+
+              <button className="btn btn-secondary" onClick={() => setShowOptions(false)} style={{ width: 'auto', padding: '10px 24px' }}>
+                <i className="fas fa-arrow-left"></i> Back
+              </button>
+            </div>
           ) : (
             <>
               <div style={{ width: 120, height: 120, margin: '0 auto 20px', background: 'var(--gray-100)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px dashed var(--gray-300)' }}>
@@ -215,41 +247,15 @@ const Scan = () => {
                   : 'Scan QR to request a break (15 min · Up to 4 per shift)'}
               </div>
 
-              {/* Scan Options Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, maxWidth: 400, margin: '0 auto' }}>
-                <button
-                  className="scan-option-btn"
-                  onClick={startCameraScanner}
-                  disabled={actionLoading}
-                >
-                  <div className="scan-option-icon" style={{ background: '#dbeafe', color: '#1a56db' }}>
-                    <i className="fas fa-camera"></i>
-                  </div>
-                  <div className="scan-option-label">Camera</div>
-                </button>
-
-                <button
-                  className="scan-option-btn"
-                  onClick={openGallery}
-                  disabled={actionLoading}
-                >
-                  <div className="scan-option-icon" style={{ background: '#d1fae5', color: '#0e9f6e' }}>
-                    <i className="fas fa-images"></i>
-                  </div>
-                  <div className="scan-option-label">Gallery</div>
-                </button>
-
-                <button
-                  className="scan-option-btn"
-                  onClick={openGallery}
-                  disabled={actionLoading}
-                >
-                  <div className="scan-option-icon" style={{ background: '#fef3c7', color: '#d97706' }}>
-                    <i className="fas fa-folder-open"></i>
-                  </div>
-                  <div className="scan-option-label">File</div>
-                </button>
-              </div>
+              {/* Main single button */}
+              <button
+                className="scan-main-btn"
+                onClick={() => setShowOptions(true)}
+                disabled={actionLoading}
+              >
+                <i className="fas fa-qrcode" style={{ fontSize: 28 }}></i>
+                <span>Scan QR Code for Break</span>
+              </button>
 
               {/* Location hint */}
               {!myActiveBreak && (
@@ -295,6 +301,9 @@ const Scan = () => {
         .card-header { padding: 16px 20px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; justify-content: space-between; }
         .card-header h3 { font-size: 15px; font-weight: 600; color: var(--gray-800); }
         .card-body { padding: 20px; }
+        .scan-main-btn { width: 100%; max-width: 320px; padding: 24px; border: 3px dashed var(--primary); border-radius: var(--radius); background: var(--primary-light); color: var(--primary); font-size: 18px; font-weight: 700; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 10px; transition: all 0.2s; font-family: inherit; margin: 0 auto; }
+        .scan-main-btn:hover:not(:disabled) { background: #d4e6fc; transform: scale(1.02); }
+        .scan-main-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .scan-option-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 8px; border: 2px dashed var(--gray-200); border-radius: var(--radius); background: white; cursor: pointer; transition: all 0.2s; font-family: inherit; }
         .scan-option-btn:hover:not(:disabled) { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
         .scan-option-btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -309,7 +318,7 @@ const Scan = () => {
         .break-details { flex: 1; }
         .break-title { font-weight: 600; font-size: 14px; color: var(--gray-800); }
         .break-time { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
-        @media (max-width: 480px) { .scan-option-icon { width: 40px; height: 40px; font-size: 16px; } .scan-option-label { font-size: 11px; } }
+        @media (max-width: 480px) { .scan-main-btn { padding: 18px; font-size: 16px; } .scan-option-icon { width: 40px; height: 40px; font-size: 16px; } .scan-option-label { font-size: 11px; } }
       `}</style>
     </div>
   );

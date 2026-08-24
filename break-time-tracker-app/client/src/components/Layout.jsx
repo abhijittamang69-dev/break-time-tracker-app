@@ -373,6 +373,8 @@ const Layout = () => {
           .pending-badge { border-color: var(--gray-800); }
           .nav-badge { border-color: var(--gray-800); }
         }
+        @media (max-width: 480px) {
+        }
         }
         @media (max-width: 480px) {
           .main-content {

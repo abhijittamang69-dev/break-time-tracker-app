@@ -239,16 +239,6 @@ const Users = () => {
           .restricted-title { color: var(--gray-800); }
           .restricted-text { color: var(--gray-500); }
         }
-          .modal-footer { border-top-color: var(--gray-700); }
-          .modal-close { background: var(--gray-200); color: var(--gray-300); }
-          .modal-close:hover { background: var(--gray-300); color: var(--gray-800); }
-          .header-btn { background: var(--gray-100); border-color: var(--gray-600); color: var(--gray-300); }
-          .header-btn:hover { background: var(--gray-200); color: var(--gray-800); }
-          .input-wrapper input { background: var(--gray-200); border-color: var(--gray-600); color: var(--gray-800); }
-          .input-wrapper input:focus { background: var(--gray-100); }
-          .restricted-title { color: var(--gray-800); }
-          .restricted-text { color: var(--gray-400); }
-        }
       `}</style>
     </div>
   );

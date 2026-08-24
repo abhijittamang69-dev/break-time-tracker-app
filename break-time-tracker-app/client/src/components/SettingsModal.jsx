@@ -239,19 +239,6 @@ const SettingsModal = ({ isAdmin, onClose }) => {
           .alert-warning { border-color: #7f1d1d; }
           .qr-preview { background: var(--gray-200); border-color: var(--gray-600); }
         }
-          .modal-tabs { border-bottom-color: var(--gray-700); }
-          .modal-tab { color: var(--gray-400); }
-          .modal-tab.active { background: var(--primary-light); color: var(--primary); }
-          .modal-tab:hover { color: var(--gray-700); background: var(--gray-200); }
-          .modal-footer { border-top-color: var(--gray-700); }
-          .modal-close { background: var(--gray-200); color: var(--gray-300); }
-          .modal-close:hover { background: var(--gray-300); color: var(--gray-800); }
-          .input-wrapper input { background: var(--gray-200); border-color: var(--gray-600); color: var(--gray-800); }
-          .input-wrapper input:focus { background: var(--gray-100); }
-          .alert-success { border-color: #14532d; }
-          .alert-warning { border-color: #7f1d1d; }
-          .qr-preview { background: var(--gray-200); border-color: var(--gray-600); }
-        }
       `}</style>
     </div>
   );

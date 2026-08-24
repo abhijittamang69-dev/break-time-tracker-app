@@ -112,6 +112,8 @@ const Login = () => {
           .input-wrapper input:focus { background: var(--gray-100); }
           .input-wrapper i { color: var(--gray-500); }
         }
+        @media (max-width: 480px) { .login-card { padding: 28px 20px; } }
+        }
         }
         @media (max-width: 480px) { .login-card { padding: 28px 20px; } }
       `}</style>

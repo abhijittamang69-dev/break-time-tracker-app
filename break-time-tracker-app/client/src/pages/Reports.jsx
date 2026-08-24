@@ -97,7 +97,7 @@ const Reports = () => {
               <thead><tr><th>Date</th><th>Employee</th><th>Break #</th><th>Status</th><th>Requested</th><th>Started</th><th>End</th><th>Duration</th></tr></thead>
               <tbody>
                 {report.allBreaks.length === 0 ? (
-                  <tr><td colSpan="8" style={{ textAlign: 'center', color: 'var(--gray-500)', padding: 30 }}>No break records today</td></tr>"8" style={{ textAlign: 'center', color: 'var(--gray-400)', padding: 30 }}>No break records today</td></tr>
+                  <tr><td colSpan="8" style={{ textAlign: 'center', color: 'var(--gray-500)', padding: 30 }}>No break records today</td></tr>
                 ) : (
                   [...report.allBreaks].sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt)).map(b => (
                     <tr key={b._id}>

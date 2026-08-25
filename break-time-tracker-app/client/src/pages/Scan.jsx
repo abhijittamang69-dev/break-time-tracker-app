@@ -83,6 +83,20 @@ const Scan = () => {
   // Auto-track user location for the map
   useEffect(() => {
     if (!navigator.geolocation) return;
+
+    // Get immediate position first
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setUserLocation([lat, lng]);
+        setDistance(getDistanceMeters(lat, lng, BREAK_AREA_LAT, BREAK_AREA_LNG));
+      },
+      () => {},
+      { enableHighAccuracy: false, maximumAge: 60000, timeout: 10000 }
+    );
+
+    // Continuous tracking
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         const lat = pos.coords.latitude;
@@ -103,60 +117,31 @@ const Scan = () => {
       reject(new Error('Geolocation is not supported by your browser'));
       return;
     }
-    let resolved = false;
-    let watchId = null;
-    let fallbackId = null;
-    const cleanup = () => {
-      if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
-      if (fallbackId !== null) { navigator.geolocation.clearWatch(fallbackId); fallbackId = null; }
-    };
-    watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        if (resolved) return;
-        resolved = true;
-        cleanup();
-        resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-      },
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       (err) => {
-        if (resolved) return;
-        if (err.code === 1) {
-          resolved = true;
-          cleanup();
-          reject(new Error('Location permission denied. Please allow location access in your browser settings.'));
-        }
+        if (err.code === 1) reject(new Error('Location permission denied. Please allow location access in your browser settings.'));
+        else if (err.code === 2) reject(new Error('Unable to determine location. Please make sure GPS/Location Services are turned ON.'));
+        else reject(new Error('Location request timed out. Please check your GPS settings and try again.'));
       },
-      { enableHighAccuracy: false, maximumAge: 300000 }
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
     );
-    fallbackId = navigator.geolocation.watchPosition(
-      (pos) => {
-        if (resolved) return;
-        resolved = true;
-        cleanup();
-        resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-      },
-      (err) => {
-        if (resolved) return;
-        if (err.code === 1) {
-          resolved = true;
-          cleanup();
-          reject(new Error('Location permission denied. Please allow location access in your browser settings.'));
-        }
-      },
-      { enableHighAccuracy: true, maximumAge: 300000 }
-    );
-    setTimeout(() => {
-      if (!resolved) {
-        resolved = true;
-        cleanup();
-        reject(new Error('Unable to get your location. Please make sure you are outdoors with a clear GPS signal, or try again with WiFi/mobile data ON.'));
-      }
-    }, 20000);
   });
 
   const validateLocation = async () => {
     setLocationLoading(true);
     try {
-      const { lat, lng } = await getLocation();
+      // If we already have location from background tracking, use it instantly
+      let lat, lng;
+      if (userLocation) {
+        lat = userLocation[0];
+        lng = userLocation[1];
+      } else {
+        const loc = await getLocation();
+        lat = loc.lat;
+        lng = loc.lng;
+        setUserLocation([lat, lng]);
+      }
       const dist = getDistanceMeters(lat, lng, BREAK_AREA_LAT, BREAK_AREA_LNG);
       setDistance(dist);
       if (dist > MAX_DISTANCE_METERS) {
@@ -262,7 +247,7 @@ const Scan = () => {
       <h1 className="page-title">QR Code Scanner</h1>
       <p className="page-subtitle">Scan to request or end your break</p>
 
-      <input ref={fileInputRef} type="file" style={{ display: 'none' }} onChange={(e) => handleFileScan(e.target.files[0])} />
+      <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleFileScan(e.target.files[0])} />
       <div id="file-reader" style={{ display: 'none' }}></div>
 
       {/* Map Card */}
@@ -422,6 +407,7 @@ const Scan = () => {
           .card { background: var(--gray-100); border-color: var(--gray-700); }
           .card-header { border-bottom-color: var(--gray-700); }
           .card-header h3 { color: var(--gray-800); }
+          .scan-main-btn { background: var(--primary-light); color: var(--primary); }
           .scan-main-btn:hover:not(:disabled) { background: #1e3a5f; }
           .break-item { background: var(--gray-200); border-color: var(--gray-600); }
           .break-title { color: var(--gray-800); }

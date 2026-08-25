@@ -50,50 +50,73 @@ const Scan = () => {
 
   useEffect(() => {
     checkBreakStatus();
-    // Fetch settings
     getSettings().then(res => setSettings(res.data)).catch(() => {});
   }, [checkBreakStatus]);
 
   const showToast = (message, type) => setToast({ message, type });
 
-  // Get location with controlled timeout and fallback strategy
+  // Get location using watchPosition (more reliable on Android than getCurrentPosition)
   const getLocation = () => new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error('Geolocation is not supported by your browser'));
       return;
     }
 
-    const tryGetPosition = (highAccuracy, msTimeout) => new Promise((res, rej) => {
-      const timer = setTimeout(() => rej(new Error('timeout')), msTimeout);
-      navigator.geolocation.getCurrentPosition(
-        (pos) => { clearTimeout(timer); res({ lat: pos.coords.latitude, lng: pos.coords.longitude }); },
-        (err) => { clearTimeout(timer); rej(err); },
-        { enableHighAccuracy: highAccuracy, timeout: msTimeout, maximumAge: 120000 }
-      );
-    });
+    let resolved = false;
+    let watchId = null;
+    let fallbackId = null;
 
-    // Try low-accuracy (network/WiFi) first — fast and works indoors
-    tryGetPosition(false, 5000)
-      .then(resolve)
-      .catch((err1) => {
-        // If permission denied, don't retry
-        if (err1.code === 1 || (err1.message && err1.message.includes('denied'))) {
+    const cleanup = () => {
+      if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+      if (fallbackId !== null) { navigator.geolocation.clearWatch(fallbackId); fallbackId = null; }
+    };
+
+    // Low-accuracy watch (network/WiFi) — usually returns cached position quickly
+    watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        if (resolved) return;
+        resolved = true;
+        cleanup();
+        resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
+      (err) => {
+        if (resolved) return;
+        if (err.code === 1) {
+          resolved = true;
+          cleanup();
           reject(new Error('Location permission denied. Please allow location access in your browser settings.'));
-          return;
         }
-        // Fallback: try high-accuracy (GPS)
-        tryGetPosition(true, 7000)
-          .then(resolve)
-          .catch((err2) => {
-            if (err2.code === 1 || (err2.message && err2.message.includes('denied'))) {
-              reject(new Error('Location permission denied. Please allow location access in your browser settings.'));
-            } else if (err2.code === 2 || (err1.code === 2)) {
-              reject(new Error('Unable to determine location. Please make sure GPS/Location Services are turned ON and try again outdoors.'));
-            } else {
-              reject(new Error('Location request timed out. Please check your GPS settings and try again.'));
-            }
-          });
-      });
+      },
+      { enableHighAccuracy: false, maximumAge: 300000 }
+    );
+
+    // High-accuracy watch (GPS) in parallel
+    fallbackId = navigator.geolocation.watchPosition(
+      (pos) => {
+        if (resolved) return;
+        resolved = true;
+        cleanup();
+        resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
+      (err) => {
+        if (resolved) return;
+        if (err.code === 1) {
+          resolved = true;
+          cleanup();
+          reject(new Error('Location permission denied. Please allow location access in your browser settings.'));
+        }
+      },
+      { enableHighAccuracy: true, maximumAge: 300000 }
+    );
+
+    // Safety timeout: if neither watch gives a reading in 20s, give up
+    setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        cleanup();
+        reject(new Error('Unable to get your location. Please make sure you are outdoors with a clear GPS signal, or try again with WiFi/mobile data ON.'));
+      }
+    }, 20000);
   });
 
   const validateLocation = async () => {
@@ -165,14 +188,11 @@ const Scan = () => {
 
   const handleFileScan = async (file) => {
     if (!file) return;
-
-    // Validate file is an image
     if (!file.type.startsWith('image/')) {
       showToast('Please select an image file (PNG, JPG, etc.)', 'error');
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
-
     setActionLoading(true);
     try {
       const html5QrCode = new Html5Qrcode('file-reader');
@@ -204,10 +224,7 @@ const Scan = () => {
       <h1 className="page-title">QR Code Scanner</h1>
       <p className="page-subtitle">Scan to request or end your break</p>
 
-      {/* Hidden file input - no accept attribute so Android shows native picker instead of jumping to Google Photos */}
       <input ref={fileInputRef} type="file" style={{ display: 'none' }} onChange={(e) => handleFileScan(e.target.files[0])} />
-
-      {/* File reader placeholder (needed by Html5Qrcode) */}
       <div id="file-reader" style={{ display: 'none' }}></div>
 
       <div className="card">
@@ -244,7 +261,6 @@ const Scan = () => {
                   : `Scan QR to request a break (${modeDefaultDuration} min · Up to ${modeMaxBreaks} per shift)`}
               </div>
 
-              {/* Main button - triggers native file picker (Camera/Gallery/Files) */}
               <button
                 className="scan-main-btn"
                 onClick={() => { if (fileInputRef.current) fileInputRef.current.click(); }}
@@ -254,7 +270,6 @@ const Scan = () => {
                 <span>Scan QR Code for Break</span>
               </button>
 
-              {/* Location hint */}
               {!myActiveBreak && (
                 <div className="location-hint">
                   <div className="location-hint-text">

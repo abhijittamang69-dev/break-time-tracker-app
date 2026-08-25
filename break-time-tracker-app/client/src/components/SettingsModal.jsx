@@ -32,17 +32,6 @@ const SettingsModal = ({ isAdmin, onClose }) => {
     } catch (err) { console.error(err); }
   };
 
-  // Check if QR was already generated today
-  const isSameDay = (d1, d2) => {
-    if (!d1 || !d2) return false;
-    const a = new Date(d1);
-    const b = new Date(d2);
-    return a.getFullYear() === b.getFullYear() &&
-           a.getMonth() === b.getMonth() &&
-           a.getDate() === b.getDate();
-  };
-  const canRegenerateQR = !settings.qrGeneratedAt || !isSameDay(new Date(), settings.qrGeneratedAt);
-
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
@@ -75,16 +64,6 @@ const SettingsModal = ({ isAdmin, onClose }) => {
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update settings');
     } finally { setSettingsLoading(false); }
-  };
-
-  const regenerateQR = () => {
-    if (!canRegenerateQR) {
-      setError('QR code can only be regenerated once per day.');
-      return;
-    }
-    const newValue = 'BREAK_QR_' + Math.random().toString(36).substring(2, 10).toUpperCase();
-    setSettings(prev => ({ ...prev, qrCodeValue: newValue, qrGeneratedAt: new Date().toISOString() }));
-    setMessage('QR code regenerated. Click Save QR Code to download.');
   };
 
   // Download QR image with file picker using File System Access API
@@ -125,6 +104,11 @@ const SettingsModal = ({ isAdmin, onClose }) => {
         setError('Failed to save QR code image.');
       }
     }
+  };
+
+  const fmtDate = (d) => {
+    if (!d) return 'Not yet generated';
+    return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
   return (
@@ -224,24 +208,10 @@ const SettingsModal = ({ isAdmin, onClose }) => {
             <div className="modal-body" style={{ textAlign: 'center' }}>
               <div className="form-group" style={{ textAlign: 'left' }}>
                 <label>QR Code Value</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <input type="text" value={settings.qrCodeValue} readOnly style={{ ...inputStyle, flex: 1, background: 'var(--gray-100)' }} />
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={regenerateQR}
-                    disabled={!canRegenerateQR}
-                    title={canRegenerateQR ? 'Generate new QR code' : 'QR can only be regenerated once per day'}
-                    style={{ width: 'auto', padding: '10px 16px', opacity: canRegenerateQR ? 1 : 0.5 }}
-                  >
-                    <i className="fas fa-sync-alt"></i> Regenerate
-                  </button>
+                <input type="text" value={settings.qrCodeValue} readOnly style={{ ...inputStyle, background: 'var(--gray-100)' }} />
+                <div style={{ fontSize: 12, color: 'var(--gray-500)', marginTop: 6 }}>
+                  <i className="fas fa-info-circle"></i> QR auto-generates daily at 6:00 AM. Last updated: {fmtDate(settings.qrGeneratedAt)}
                 </div>
-                {!canRegenerateQR && (
-                  <div style={{ fontSize: 12, color: 'var(--warning)', marginTop: 6 }}>
-                    <i className="fas fa-info-circle"></i> QR code was already generated today. You can regenerate tomorrow.
-                  </div>
-                )}
               </div>
               <div className="qr-preview">
                 <img
@@ -254,9 +224,6 @@ const SettingsModal = ({ isAdmin, onClose }) => {
               <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
                 <button type="button" className="btn btn-primary" onClick={saveQRImage} style={{ width: 'auto', padding: '10px 20px' }}>
                   <i className="fas fa-download"></i> Save QR Image
-                </button>
-                <button type="button" className="btn btn-primary" onClick={handleSettingsSave} disabled={settingsLoading} style={{ width: 'auto', padding: '10px 20px' }}>
-                  {settingsLoading ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-save"></i>} Save to System
                 </button>
               </div>
             </div>

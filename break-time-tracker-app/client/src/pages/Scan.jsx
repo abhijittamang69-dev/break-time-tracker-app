@@ -61,11 +61,46 @@ const Scan = () => {
       reject(new Error('Geolocation is not supported by your browser'));
       return;
     }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      (err) => reject(new Error(err.message || 'Failed to get location. Please enable GPS.')),
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
+
+    let resolved = false;
+
+    const onSuccess = (pos) => {
+      if (resolved) return;
+      resolved = true;
+      resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+    };
+
+    const onError = (err) => {
+      if (resolved) return;
+      resolved = true;
+      reject(new Error(err.message || 'Failed to get location. Please enable GPS.'));
+    };
+
+    // Try high accuracy first with 8s timeout
+    navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+      enableHighAccuracy: true,
+      timeout: 8000,
+      maximumAge: 60000
+    });
+
+    // Fallback: if high accuracy fails or times out, try low accuracy
+    setTimeout(() => {
+      if (!resolved) {
+        navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+          enableHighAccuracy: false,
+          timeout: 8000,
+          maximumAge: 300000
+        });
+      }
+    }, 8500);
+
+    // Hard overall timeout
+    setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        reject(new Error('Location request timed out. Please check your GPS settings and try again.'));
+      }
+    }, 17000);
   });
 
   const validateLocation = async () => {
@@ -137,6 +172,14 @@ const Scan = () => {
 
   const handleFileScan = async (file) => {
     if (!file) return;
+
+    // Validate file is an image
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select an image file (PNG, JPG, etc.)', 'error');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
     setActionLoading(true);
     try {
       const html5QrCode = new Html5Qrcode('file-reader');
@@ -168,8 +211,8 @@ const Scan = () => {
       <h1 className="page-title">QR Code Scanner</h1>
       <p className="page-subtitle">Scan to request or end your break</p>
 
-      {/* Hidden file input - triggers native browser file picker directly */}
-      <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleFileScan(e.target.files[0])} />
+      {/* Hidden file input - no accept attribute so Android shows native picker instead of jumping to Google Photos */}
+      <input ref={fileInputRef} type="file" style={{ display: 'none' }} onChange={(e) => handleFileScan(e.target.files[0])} />
 
       {/* File reader placeholder (needed by Html5Qrcode) */}
       <div id="file-reader" style={{ display: 'none' }}></div>
@@ -208,7 +251,7 @@ const Scan = () => {
                   : `Scan QR to request a break (${modeDefaultDuration} min · Up to ${modeMaxBreaks} per shift)`}
               </div>
 
-              {/* Main button - directly triggers browser native file picker */}
+              {/* Main button - triggers native file picker (Camera/Gallery/Files) */}
               <button
                 className="scan-main-btn"
                 onClick={() => { if (fileInputRef.current) fileInputRef.current.click(); }}

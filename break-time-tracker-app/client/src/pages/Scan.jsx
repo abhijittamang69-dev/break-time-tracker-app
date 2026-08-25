@@ -1,9 +1,25 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Html5QrcodeScanner, Html5Qrcode } from 'html5-qrcode';
+import { MapContainer, TileLayer, Marker, Circle, Popup, useMap } from 'react-leaflet';
 import { useAuth } from '../context/AuthContext';
 import { requestBreak, endBreak, getTodayBreaks } from '../api/breaks';
 import { getSettings } from '../api/settings';
 import Toast from '../components/Toast';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix default marker icon
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+const defaultIcon = L.icon({
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+
+L.Marker.prototype.options.icon = defaultIcon;
 
 // Break area coordinates: 25°14'28.90"N 51°28'31.51"E
 const BREAK_AREA_LAT = 25 + 14/60 + 28.90/3600;
@@ -21,6 +37,15 @@ const getDistanceMeters = (lat1, lng1, lat2, lng2) => {
   return R * c;
 };
 
+// Component that pans map to user location
+const MapUpdater = ({ center }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (center) map.setView(center, 19);
+  }, [center, map]);
+  return null;
+};
+
 const Scan = () => {
   const { user } = useAuth();
   const scannerRef = useRef(null);
@@ -32,6 +57,8 @@ const Scan = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const [settings, setSettings] = useState({ maxBreakMinutes: 60, maxBreaksPerShift: 3, defaultBreakDuration: 15, reminderMinutesBeforeEnd: 5 });
+  const [userLocation, setUserLocation] = useState(null);
+  const [distance, setDistance] = useState(null);
 
   const isOperator = user?.role === 'Operator';
 
@@ -53,25 +80,36 @@ const Scan = () => {
     getSettings().then(res => setSettings(res.data)).catch(() => {});
   }, [checkBreakStatus]);
 
+  // Auto-track user location for the map
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setUserLocation([lat, lng]);
+        setDistance(getDistanceMeters(lat, lng, BREAK_AREA_LAT, BREAK_AREA_LNG));
+      },
+      () => {},
+      { enableHighAccuracy: false, maximumAge: 30000 }
+    );
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, []);
+
   const showToast = (message, type) => setToast({ message, type });
 
-  // Get location using watchPosition (more reliable on Android than getCurrentPosition)
   const getLocation = () => new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error('Geolocation is not supported by your browser'));
       return;
     }
-
     let resolved = false;
     let watchId = null;
     let fallbackId = null;
-
     const cleanup = () => {
       if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
       if (fallbackId !== null) { navigator.geolocation.clearWatch(fallbackId); fallbackId = null; }
     };
-
-    // Low-accuracy watch (network/WiFi) — usually returns cached position quickly
     watchId = navigator.geolocation.watchPosition(
       (pos) => {
         if (resolved) return;
@@ -89,8 +127,6 @@ const Scan = () => {
       },
       { enableHighAccuracy: false, maximumAge: 300000 }
     );
-
-    // High-accuracy watch (GPS) in parallel
     fallbackId = navigator.geolocation.watchPosition(
       (pos) => {
         if (resolved) return;
@@ -108,8 +144,6 @@ const Scan = () => {
       },
       { enableHighAccuracy: true, maximumAge: 300000 }
     );
-
-    // Safety timeout: if neither watch gives a reading in 20s, give up
     setTimeout(() => {
       if (!resolved) {
         resolved = true;
@@ -123,9 +157,10 @@ const Scan = () => {
     setLocationLoading(true);
     try {
       const { lat, lng } = await getLocation();
-      const distance = getDistanceMeters(lat, lng, BREAK_AREA_LAT, BREAK_AREA_LNG);
-      if (distance > MAX_DISTANCE_METERS) {
-        showToast(`You are ${Math.round(distance)}m away from the break area. Must be within ${MAX_DISTANCE_METERS}m.`, 'error');
+      const dist = getDistanceMeters(lat, lng, BREAK_AREA_LAT, BREAK_AREA_LNG);
+      setDistance(dist);
+      if (dist > MAX_DISTANCE_METERS) {
+        showToast(`You are ${Math.round(dist)}m away from the break area. Must be within ${MAX_DISTANCE_METERS}m.`, 'error');
         return null;
       }
       return { lat, lng };
@@ -218,6 +253,9 @@ const Scan = () => {
     if (scannerRef.current) scannerRef.current.clear().catch(() => {});
   }, []);
 
+  const isInRange = distance !== null && distance <= MAX_DISTANCE_METERS;
+  const mapCenter = userLocation || [BREAK_AREA_LAT, BREAK_AREA_LNG];
+
   return (
     <div className="animate-fade-in">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
@@ -226,6 +264,54 @@ const Scan = () => {
 
       <input ref={fileInputRef} type="file" style={{ display: 'none' }} onChange={(e) => handleFileScan(e.target.files[0])} />
       <div id="file-reader" style={{ display: 'none' }}></div>
+
+      {/* Map Card */}
+      <div className="card" style={{ overflow: 'visible' }}>
+        <div className="card-header">
+          <h3><i className="fas fa-map-marked-alt" style={{ marginRight: 8, color: 'var(--primary)' }}></i>Break Area Location</h3>
+          {distance !== null && (
+            <span className={`badge ${isInRange ? 'badge-success' : 'badge-warning'}`}>
+              {isInRange ? <><i className="fas fa-check-circle"></i> In Range</> : <><i className="fas fa-exclamation-circle"></i> {Math.round(distance)}m away</>}
+            </span>
+          )}
+        </div>
+        <div className="card-body" style={{ padding: 0 }}>
+          <div style={{ height: 280, width: '100%', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+            <MapContainer center={mapCenter} zoom={19} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <MapUpdater center={userLocation} />
+              {/* Break area marker */}
+              <Marker position={[BREAK_AREA_LAT, BREAK_AREA_LNG]}>
+                <Popup>Break Area</Popup>
+              </Marker>
+              {/* 10m radius circle */}
+              <Circle
+                center={[BREAK_AREA_LAT, BREAK_AREA_LNG]}
+                radius={MAX_DISTANCE_METERS}
+                pathOptions={{ color: isInRange ? '#0e9f6e' : '#f05252', fillColor: isInRange ? '#0e9f6e' : '#f05252', fillOpacity: 0.15, weight: 2 }}
+              />
+              {/* User location marker */}
+              {userLocation && (
+                <Marker position={userLocation}>
+                  <Popup>Your Location</Popup>
+                </Marker>
+              )}
+            </MapContainer>
+          </div>
+          {distance !== null && (
+            <div style={{ padding: '12px 16px', fontSize: 13, textAlign: 'center' }}>
+              {isInRange ? (
+                <span style={{ color: 'var(--success)', fontWeight: 600 }}><i className="fas fa-check-circle"></i> You are within the break area ({Math.round(distance)}m)</span>
+              ) : (
+                <span style={{ color: 'var(--warning)', fontWeight: 600 }}><i className="fas fa-exclamation-triangle"></i> You are {Math.round(distance)}m away. Move closer to the break area.</span>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
 
       <div className="card">
         <div className="card-body" style={{ textAlign: 'center' }}>

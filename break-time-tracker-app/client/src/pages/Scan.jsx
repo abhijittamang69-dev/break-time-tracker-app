@@ -56,51 +56,44 @@ const Scan = () => {
 
   const showToast = (message, type) => setToast({ message, type });
 
+  // Get location with controlled timeout and fallback strategy
   const getLocation = () => new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error('Geolocation is not supported by your browser'));
       return;
     }
 
-    let resolved = false;
-
-    const onSuccess = (pos) => {
-      if (resolved) return;
-      resolved = true;
-      resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-    };
-
-    const onError = (err) => {
-      if (resolved) return;
-      resolved = true;
-      reject(new Error(err.message || 'Failed to get location. Please enable GPS.'));
-    };
-
-    // Try high accuracy first with 8s timeout
-    navigator.geolocation.getCurrentPosition(onSuccess, onError, {
-      enableHighAccuracy: true,
-      timeout: 8000,
-      maximumAge: 60000
+    const tryGetPosition = (highAccuracy, msTimeout) => new Promise((res, rej) => {
+      const timer = setTimeout(() => rej(new Error('timeout')), msTimeout);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => { clearTimeout(timer); res({ lat: pos.coords.latitude, lng: pos.coords.longitude }); },
+        (err) => { clearTimeout(timer); rej(err); },
+        { enableHighAccuracy: highAccuracy, timeout: msTimeout, maximumAge: 120000 }
+      );
     });
 
-    // Fallback: if high accuracy fails or times out, try low accuracy
-    setTimeout(() => {
-      if (!resolved) {
-        navigator.geolocation.getCurrentPosition(onSuccess, onError, {
-          enableHighAccuracy: false,
-          timeout: 8000,
-          maximumAge: 300000
-        });
-      }
-    }, 8500);
-
-    // Hard overall timeout
-    setTimeout(() => {
-      if (!resolved) {
-        resolved = true;
-        reject(new Error('Location request timed out. Please check your GPS settings and try again.'));
-      }
-    }, 17000);
+    // Try low-accuracy (network/WiFi) first — fast and works indoors
+    tryGetPosition(false, 5000)
+      .then(resolve)
+      .catch((err1) => {
+        // If permission denied, don't retry
+        if (err1.code === 1 || (err1.message && err1.message.includes('denied'))) {
+          reject(new Error('Location permission denied. Please allow location access in your browser settings.'));
+          return;
+        }
+        // Fallback: try high-accuracy (GPS)
+        tryGetPosition(true, 7000)
+          .then(resolve)
+          .catch((err2) => {
+            if (err2.code === 1 || (err2.message && err2.message.includes('denied'))) {
+              reject(new Error('Location permission denied. Please allow location access in your browser settings.'));
+            } else if (err2.code === 2 || (err1.code === 2)) {
+              reject(new Error('Unable to determine location. Please make sure GPS/Location Services are turned ON and try again outdoors.'));
+            } else {
+              reject(new Error('Location request timed out. Please check your GPS settings and try again.'));
+            }
+          });
+      });
   });
 
   const validateLocation = async () => {

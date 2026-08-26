@@ -20,6 +20,8 @@ const getDistanceMeters = (lat1, lng1, lat2, lng2) => {
   return R * c;
 };
 
+const DURATION_OPTIONS = [15, 30, 60];
+
 const Scan = () => {
   const { user } = useAuth();
   const [toast, setToast] = useState(null);
@@ -30,11 +32,11 @@ const Scan = () => {
   const [settings, setSettings] = useState({ maxBreakMinutes: 60, maxBreaksPerShift: 3, defaultBreakDuration: 15, reminderMinutesBeforeEnd: 5 });
   const [userLocation, setUserLocation] = useState(null);
   const [distance, setDistance] = useState(null);
+  const [selectedDuration, setSelectedDuration] = useState(15);
 
   const isOperator = user?.role === 'Operator';
 
   const modeMaxBreaks = settings.maxBreaksPerShift || 3;
-  const modeDefaultDuration = settings.defaultBreakDuration || 15;
   const modeMaxMinutes = settings.maxBreakMinutes || 60;
 
   const checkBreakStatus = useCallback(async () => {
@@ -145,7 +147,7 @@ const Scan = () => {
       const res = await getTodayBreaks();
       const myBreaks = res.data.filter(b => b.userId === user?.id || b.userId?._id === user?.id);
       const completed = myBreaks.filter(b => b.status === 'completed' || b.status === 'late');
-      await requestBreak(completed.length + 1, modeDefaultDuration, 'manual', loc.lat, loc.lng);
+      await requestBreak(completed.length + 1, selectedDuration, 'manual', loc.lat, loc.lng);
       showToast('Break requested! Waiting for supervisor approval.', 'success');
       checkBreakStatus();
     } catch (err) {
@@ -170,7 +172,7 @@ const Scan = () => {
   return (
     <div className="animate-fade-in">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
-      <h1 className="page-title">Break Request</h1>
+      <h1 className="page-title">Scan QR to Break</h1>
       <p className="page-subtitle">Request or end your break</p>
 
       {/* Location Status Card */}
@@ -240,8 +242,32 @@ const Scan = () => {
           ) : (
             <>
               <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--gray-700)', marginBottom: 4 }}>Request a Break</div>
-              <div style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 24 }}>
-                {`Request a break (${modeDefaultDuration} min · Up to ${modeMaxBreaks} per shift)`}
+              <div style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 16 }}>
+                {`Up to ${modeMaxBreaks} breaks per shift · Max ${modeMaxMinutes} min each`}
+              </div>
+
+              {/* Duration Selector */}
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 24 }}>
+                {DURATION_OPTIONS.map((mins) => (
+                  <button
+                    key={mins}
+                    onClick={() => setSelectedDuration(mins)}
+                    className="duration-chip"
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: 8,
+                      border: selectedDuration === mins ? '2px solid var(--primary)' : '2px solid var(--gray-200)',
+                      background: selectedDuration === mins ? 'var(--primary-light)' : 'var(--gray-50)',
+                      color: selectedDuration === mins ? 'var(--primary)' : 'var(--gray-600)',
+                      fontWeight: 700,
+                      fontSize: 14,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    {mins} min
+                  </button>
+                ))}
               </div>
 
               <button
@@ -271,7 +297,7 @@ const Scan = () => {
         <div className="card-body">
           <div className="break-list">
             {[
-              { icon: 'fa-paper-plane', title: 'Request Break', desc: `Operator requests a break (${modeDefaultDuration} min, max ${modeMaxBreaks} per shift)` },
+              { icon: 'fa-paper-plane', title: 'Request Break', desc: `Operator requests a break (15/30/60 min, max ${modeMaxBreaks} per shift)` },
               { icon: 'fa-user-check', title: 'Supervisor Approval', desc: 'Supervisor/Team Leader/Coordinator reviews and approves' },
               { icon: 'fa-play-circle', title: 'Break Starts', desc: 'Once approved, break timer begins automatically' },
               { icon: 'fa-bell', title: '5-Min Reminder', desc: 'Operator gets notified 5 minutes before break ends' },

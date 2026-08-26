@@ -37,11 +37,15 @@ const getDistanceMeters = (lat1, lng1, lat2, lng2) => {
   return R * c;
 };
 
-// Component that pans map to user location
+// Component that pans map to user location once
 const MapUpdater = ({ center }) => {
   const map = useMap();
+  const hasCentered = useRef(false);
   useEffect(() => {
-    if (center) map.setView(center, 19);
+    if (center && !hasCentered.current) {
+      map.setView(center, 19);
+      hasCentered.current = true;
+    }
   }, [center, map]);
   return null;
 };
@@ -59,6 +63,7 @@ const Scan = () => {
   const [settings, setSettings] = useState({ maxBreakMinutes: 60, maxBreaksPerShift: 3, defaultBreakDuration: 15, reminderMinutesBeforeEnd: 5 });
   const [userLocation, setUserLocation] = useState(null);
   const [distance, setDistance] = useState(null);
+  const [mapError, setMapError] = useState(false);
 
   const isOperator = user?.role === 'Operator';
 
@@ -261,11 +266,22 @@ const Scan = () => {
           )}
         </div>
         <div className="card-body" style={{ padding: 0 }}>
-          <div style={{ height: 280, width: '100%', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+          <div style={{ height: 280, width: '100%', borderRadius: 'var(--radius)', overflow: 'hidden', position: 'relative' }}>
+            {mapError && (
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--gray-100)', zIndex: 10, flexDirection: 'column', gap: 8 }}>
+                <i className="fas fa-map" style={{ fontSize: 32, color: 'var(--gray-400)' }}></i>
+                <span style={{ fontSize: 13, color: 'var(--gray-500)' }}>Map could not load. Please check your connection.</span>
+              </div>
+            )}
             <MapContainer center={mapCenter} zoom={19} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
               <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                subdomains="abcd"
+                maxZoom={20}
+                eventHandlers={{
+                  tileerror: () => setMapError(true)
+                }}
               />
               <MapUpdater center={userLocation} />
               {/* Break area marker */}

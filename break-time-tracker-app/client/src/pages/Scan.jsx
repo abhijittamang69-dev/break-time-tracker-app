@@ -239,9 +239,6 @@ const Scan = () => {
             </>
           ) : (
             <>
-              <div style={{ width: 120, height: 120, margin: '0 auto 20px', background: 'var(--gray-100)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px dashed var(--gray-300)' }}>
-                <i className="fas fa-hand-paper" style={{ fontSize: 48, color: 'var(--gray-400)' }}></i>
-              </div>
               <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--gray-700)', marginBottom: 4 }}>Request a Break</div>
               <div style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 24 }}>
                 {`Request a break (${modeDefaultDuration} min · Up to ${modeMaxBreaks} per shift)`}

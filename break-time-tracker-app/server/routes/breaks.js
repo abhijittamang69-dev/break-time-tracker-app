@@ -13,6 +13,15 @@ const getTodayRange = () => {
   return { start, end };
 };
 
+// Auto-detect shift from break request time
+// Morning: 6:00 - before 14:00, Afternoon: 14:00 - before 22:00, Night: 22:00 - before 6:00
+const getShiftFromTime = (date) => {
+  const hour = new Date(date).getHours();
+  if (hour >= 6 && hour < 14) return 'Morning';
+  if (hour >= 14 && hour < 22) return 'Afternoon';
+  return 'Night';
+};
+
 // Break area coordinates: 25°14'28.90"N 51°28'31.51"E
 const BREAK_AREA_LAT = 25 + 14/60 + 28.90/3600;
 const BREAK_AREA_LNG = 51 + 28/60 + 31.51/3600;
@@ -190,11 +199,12 @@ router.post('/request', auth, async (req, res) => {
     }
 
     const now = new Date();
+    const detectedShift = getShiftFromTime(now);
     const newBreak = new Break({
       userId: userId,
       userName: req.user.name,
       userRole: req.user.role,
-      shift: req.user.shift || 'Morning',
+      shift: detectedShift,
       breakNumber: breakNumber || (todayBreaks.length + 1),
       date: now,
       status: 'pending',
@@ -313,11 +323,15 @@ router.get('/reports', auth, async (req, res) => {
     const staffStats = users.map(user => {
       const userBreaks = todayBreaks.filter(b => b.userId.toString() === user._id.toString());
       const userCompleted = userBreaks.filter(b => b.status === 'completed' || b.status === 'late');
+      // Auto-detect shift from the first break's requestedAt, or current time if no breaks
+      const detectedShift = userBreaks.length > 0
+        ? getShiftFromTime(userBreaks[0].requestedAt)
+        : getShiftFromTime(new Date());
       return {
         id: user._id.toString(),
         name: user.name,
         role: user.role,
-        shift: user.shift,
+        shift: detectedShift,
         breaksTaken: userCompleted.length,
         totalTime: userCompleted.reduce((sum, b) => sum + (b.duration || 0), 0),
         onBreak: userBreaks.some(b => b.status === 'active'),
@@ -325,6 +339,12 @@ router.get('/reports', auth, async (req, res) => {
         isLate: userCompleted.some(b => b.status === 'late')
       };
     });
+
+    // Add auto-detected shift to each break record for the report
+    const allBreaksWithShift = todayBreaks.map(b => ({
+      ...b.toObject(),
+      shift: getShiftFromTime(b.requestedAt)
+    }));
 
     res.json({
       totalBreaks: completed.length,
@@ -334,7 +354,7 @@ router.get('/reports', auth, async (req, res) => {
       activeBreaks: active.length,
       pendingRequests: pending.length,
       staffStats,
-      allBreaks: todayBreaks
+      allBreaks: allBreaksWithShift
     });
   } catch (error) {
     console.error('Get reports error:', error);

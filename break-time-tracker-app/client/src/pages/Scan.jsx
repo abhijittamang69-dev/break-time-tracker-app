@@ -37,7 +37,14 @@ const Scan = () => {
 
   const isOperator = user?.role === 'Operator';
 
-  const modeMaxBreaks = settings.maxBreaksPerShift || 3;
+  const getMaxBreaksForDuration = (duration) => {
+    if (duration === 15) return 4;
+    if (duration === 30) return 2;
+    if (duration === 60) return 1;
+    return 3;
+  };
+
+  const maxBreaksForSelected = getMaxBreaksForDuration(selectedDuration);
   const modeMaxMinutes = settings.maxBreakMinutes || 60;
 
   const checkBreakStatus = useCallback(async () => {
@@ -151,6 +158,11 @@ const Scan = () => {
       const res = await getTodayBreaks();
       const myBreaks = res.data.filter(b => b.userId === user?.id || b.userId?._id === user?.id);
       const completed = myBreaks.filter(b => b.status === 'completed' || b.status === 'late');
+      if (completed.length >= maxBreaksForSelected) {
+        showToast(`You have used all ${maxBreaksForSelected} breaks for ${selectedDuration} min today.`, 'error');
+        setActionLoading(false);
+        return;
+      }
       await requestBreak(completed.length + 1, selectedDuration, 'manual', userLocation[0], userLocation[1]);
       showToast('Break requested! Waiting for supervisor approval.', 'success');
       setShowDurationOptions(false);
@@ -306,7 +318,7 @@ const Scan = () => {
             <>
               <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--gray-700)', marginBottom: 4 }}>Request a Break</div>
               <div style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 24 }}>
-                {`Up to ${modeMaxBreaks} breaks per shift · Max ${modeMaxMinutes} min each`}
+                {`Up to ${maxBreaksForSelected} breaks per shift · Max ${modeMaxMinutes} min each`}
               </div>
 
               <button
@@ -336,7 +348,7 @@ const Scan = () => {
         <div className="card-body">
           <div className="break-list">
             {[
-              { icon: 'fa-paper-plane', title: 'Request Break', desc: `Operator requests a break (15/30/60 min, max ${modeMaxBreaks} per shift)` },
+              { icon: 'fa-paper-plane', title: 'Request Break', desc: 'Operator requests a break (15 min = 4x, 30 min = 2x, 60 min = 1x per shift)' },
               { icon: 'fa-user-check', title: 'Supervisor Approval', desc: 'Supervisor/Team Leader/Coordinator reviews and approves' },
               { icon: 'fa-play-circle', title: 'Break Starts', desc: 'Once approved, break timer begins automatically' },
               { icon: 'fa-bell', title: '5-Min Reminder', desc: 'Operator gets notified 5 minutes before break ends' },

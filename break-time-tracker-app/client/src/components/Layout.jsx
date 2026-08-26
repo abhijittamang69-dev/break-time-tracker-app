@@ -102,7 +102,7 @@ const Layout = () => {
 
   const allNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-pie', path: '/' },
-    { id: 'scan', label: 'Scan QR', icon: 'fa-qrcode', path: '/scan' },
+    { id: 'scan', label: 'Break', icon: 'fa-qrcode', path: '/scan' },
     { id: 'history', label: 'History', icon: 'fa-history', path: '/history' },
     { id: 'reports', label: 'Reports', icon: 'fa-file-alt', path: '/reports' },
     { id: 'users', label: 'Users', icon: 'fa-users', path: '/users', approverOnly: true },

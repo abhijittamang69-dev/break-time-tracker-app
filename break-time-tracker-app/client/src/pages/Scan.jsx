@@ -162,6 +162,8 @@ const Scan = () => {
 
   const handleEndBreak = async () => {
     if (!myActiveBreak) return;
+    const loc = await validateLocation();
+    if (!loc) return;
     setActionLoading(true);
     try {
       await endBreak(myActiveBreak._id);
@@ -237,12 +239,20 @@ const Scan = () => {
               <button
                 className="btn btn-danger"
                 onClick={handleEndBreak}
-                disabled={actionLoading}
+                disabled={actionLoading || !isInRange}
                 style={{ width: '100%', maxWidth: 320, margin: '0 auto' }}
               >
                 <i className="fas fa-stop-circle" style={{ fontSize: 20 }}></i>
                 <span>End Break</span>
               </button>
+              {!isInRange && distance !== null && (
+                <div className="location-hint" style={{ background: 'var(--warning-light)', borderColor: 'var(--warning-light)', marginTop: 16 }}>
+                  <div className="location-hint-text" style={{ color: 'var(--warning)' }}>
+                    <i className="fas fa-exclamation-triangle" style={{ marginRight: 6 }}></i>
+                    You must be within 10 meters of the break area to end your break.
+                  </div>
+                </div>
+              )}
             </>
           ) : showDurationOptions ? (
             <>

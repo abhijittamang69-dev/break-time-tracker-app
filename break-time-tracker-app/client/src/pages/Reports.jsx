@@ -21,10 +21,10 @@ const Reports = () => {
 
   const downloadCSV = () => {
     if (!report) return;
-    const logoRow = ['LOGO', '', '', '', '', '', ''];
-    const emptyRow = ['', '', '', '', '', '', ''];
-    const headers = ['S/N', 'Employee Name ', 'Role', 'Shift', 'Breaks Taken', 'Total Time (sec)', 'Status'];
-    const rows = report.staffStats.map((s, idx) => [
+    const logoRow = 'LOGO,,,,,,';
+    const emptyRow = ',,,,,,';
+    const headerRow = 'S/N,Employee Name ,Role,Shift,Breaks Taken,Total Time (sec),Status';
+    const dataRows = report.staffStats.map((s, idx) => [
       idx + 1,
       s.name,
       s.role,
@@ -32,10 +32,8 @@ const Reports = () => {
       s.breaksTaken,
       s.totalTime,
       s.onBreak ? 'On Break' : s.pending ? 'Pending' : s.isLate ? 'Late' : 'OK'
-    ]);
-    const csv = [logoRow, emptyRow, emptyRow, emptyRow, headers, ...rows]
-      .map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-      .join('\n');
+    ].join(','));
+    const csv = [logoRow, emptyRow, emptyRow, emptyRow, headerRow, ...dataRows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

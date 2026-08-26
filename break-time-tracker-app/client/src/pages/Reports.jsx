@@ -21,8 +21,11 @@ const Reports = () => {
 
   const downloadCSV = () => {
     if (!report) return;
-    const headers = ['Employee', 'Role', 'Shift', 'Breaks Taken', 'Total Time (sec)', 'Status'];
-    const rows = report.staffStats.map(s => [
+    const logoRow = ['LOGO', '', '', '', '', '', ''];
+    const emptyRow = ['', '', '', '', '', '', ''];
+    const headers = ['S/N', 'Employee Name ', 'Role', 'Shift', 'Breaks Taken', 'Total Time (sec)', 'Status'];
+    const rows = report.staffStats.map((s, idx) => [
+      idx + 1,
       s.name,
       s.role,
       s.shift,
@@ -30,7 +33,9 @@ const Reports = () => {
       s.totalTime,
       s.onBreak ? 'On Break' : s.pending ? 'Pending' : s.isLate ? 'Late' : 'OK'
     ]);
-    const csv = [headers, ...rows].map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const csv = [logoRow, emptyRow, emptyRow, emptyRow, headers, ...rows]
+      .map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

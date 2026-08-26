@@ -32,6 +32,7 @@ const Scan = () => {
   const [settings, setSettings] = useState({ maxBreakMinutes: 60, maxBreaksPerShift: 3, defaultBreakDuration: 15, reminderMinutesBeforeEnd: 5 });
   const [userLocation, setUserLocation] = useState(null);
   const [distance, setDistance] = useState(null);
+  const [showDurationOptions, setShowDurationOptions] = useState(false);
   const [selectedDuration, setSelectedDuration] = useState(15);
 
   const isOperator = user?.role === 'Operator';
@@ -129,7 +130,7 @@ const Scan = () => {
     }
   };
 
-  const handleRequestBreak = async () => {
+  const handleStartRequest = async () => {
     if (!isOperator) {
       showToast('Only Operators can request breaks.', 'info');
       return;
@@ -138,17 +139,21 @@ const Scan = () => {
       showToast('You already have a pending break request.', 'info');
       return;
     }
-
     const loc = await validateLocation();
-    if (!loc) return;
+    if (loc) {
+      setShowDurationOptions(true);
+    }
+  };
 
+  const handleConfirmRequest = async () => {
     setActionLoading(true);
     try {
       const res = await getTodayBreaks();
       const myBreaks = res.data.filter(b => b.userId === user?.id || b.userId?._id === user?.id);
       const completed = myBreaks.filter(b => b.status === 'completed' || b.status === 'late');
-      await requestBreak(completed.length + 1, selectedDuration, 'manual', loc.lat, loc.lng);
+      await requestBreak(completed.length + 1, selectedDuration, 'manual', userLocation[0], userLocation[1]);
       showToast('Break requested! Waiting for supervisor approval.', 'success');
+      setShowDurationOptions(false);
       checkBreakStatus();
     } catch (err) {
       showToast(err.response?.data?.message || 'Action failed', 'error');
@@ -172,7 +177,7 @@ const Scan = () => {
   return (
     <div className="animate-fade-in">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
-      <h1 className="page-title">Scan QR to Break</h1>
+      <h1 className="page-title">Break Request</h1>
       <p className="page-subtitle">Request or end your break</p>
 
       {/* Location Status Card */}
@@ -239,14 +244,13 @@ const Scan = () => {
                 <span>End Break</span>
               </button>
             </>
-          ) : (
+          ) : showDurationOptions ? (
             <>
-              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--gray-700)', marginBottom: 4 }}>Request a Break</div>
-              <div style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 16 }}>
-                {`Up to ${modeMaxBreaks} breaks per shift · Max ${modeMaxMinutes} min each`}
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--gray-800)', marginBottom: 4 }}>Choose Break Duration</div>
+              <div style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 20 }}>
+                Select how long you want your break to be
               </div>
 
-              {/* Duration Selector */}
               <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 24 }}>
                 {DURATION_OPTIONS.map((mins) => (
                   <button
@@ -254,13 +258,13 @@ const Scan = () => {
                     onClick={() => setSelectedDuration(mins)}
                     className="duration-chip"
                     style={{
-                      padding: '10px 20px',
-                      borderRadius: 8,
+                      padding: '14px 24px',
+                      borderRadius: 10,
                       border: selectedDuration === mins ? '2px solid var(--primary)' : '2px solid var(--gray-200)',
                       background: selectedDuration === mins ? 'var(--primary-light)' : 'var(--gray-50)',
                       color: selectedDuration === mins ? 'var(--primary)' : 'var(--gray-600)',
                       fontWeight: 700,
-                      fontSize: 14,
+                      fontSize: 16,
                       cursor: 'pointer',
                       transition: 'all 0.2s',
                     }}
@@ -270,9 +274,34 @@ const Scan = () => {
                 ))}
               </div>
 
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowDurationOptions(false)}
+                  style={{ width: 'auto', padding: '12px 24px' }}
+                >
+                  <i className="fas fa-times"></i> Cancel
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleConfirmRequest}
+                  disabled={actionLoading}
+                  style={{ width: 'auto', padding: '12px 24px', background: 'var(--primary)', color: 'white' }}
+                >
+                  <i className="fas fa-check"></i> Confirm
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--gray-700)', marginBottom: 4 }}>Request a Break</div>
+              <div style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 24 }}>
+                {`Up to ${modeMaxBreaks} breaks per shift · Max ${modeMaxMinutes} min each`}
+              </div>
+
               <button
                 className="scan-main-btn"
-                onClick={handleRequestBreak}
+                onClick={handleStartRequest}
                 disabled={actionLoading || !isInRange}
               >
                 <i className="fas fa-paper-plane" style={{ fontSize: 28 }}></i>

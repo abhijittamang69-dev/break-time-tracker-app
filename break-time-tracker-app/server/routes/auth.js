@@ -173,11 +173,14 @@ router.post('/change-password', auth, async (req, res) => {
 });
 
 // @route   POST /auth/reset-password
-// @desc    Reset an operator's password (Approver only)
-// @access  Private (Approver)
+// @desc    Reset a user's password
+// @access  Private (Approver for Operators, Admin for everyone)
 router.post('/reset-password', auth, async (req, res) => {
   try {
-    if (!['Supervisor', 'Team Leader', 'Coordinator', 'Admin'].includes(req.user.role)) {
+    const isAdmin = req.user.role === 'Admin';
+    const isApprover = ['Supervisor', 'Team Leader', 'Coordinator', 'Admin'].includes(req.user.role);
+
+    if (!isApprover) {
       return res.status(403).json({ message: 'Only approvers can reset passwords' });
     }
 
@@ -194,9 +197,18 @@ router.post('/reset-password', auth, async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Only allow resetting Operator passwords
-    if (targetUser.role !== 'Operator') {
-      return res.status(403).json({ message: 'Can only reset Operator passwords' });
+    // Prevent resetting your own password here (use change-password instead)
+    if (targetUser._id.toString() === req.user._id.toString()) {
+      return res.status(403).json({ message: 'Use Change Password to reset your own password' });
+    }
+
+    if (isAdmin) {
+      // Admin can reset anyone's password (except their own, checked above)
+    } else {
+      // Non-admin approvers can ONLY reset Operator passwords
+      if (targetUser.role !== 'Operator') {
+        return res.status(403).json({ message: 'Only Admin can reset Supervisor/Coordinator passwords' });
+      }
     }
 
     const salt = await bcrypt.genSalt(10);

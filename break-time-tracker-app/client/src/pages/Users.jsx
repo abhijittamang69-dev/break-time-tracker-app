@@ -144,9 +144,16 @@ const Users = () => {
                       <i className="fas fa-edit" style={{ color: 'var(--primary)', fontSize: 12 }}></i>
                     </button>
                   )}
+                  {/* Operator password: any approver can reset */}
                   {u.role === 'Operator' && (
                     <button className="header-btn" onClick={() => handleResetPassword(u._id, u.name)} title="Reset Password" style={{ marginLeft: 8 }}>
                       <i className="fas fa-key" style={{ color: 'var(--primary)', fontSize: 12 }}></i>
+                    </button>
+                  )}
+                  {/* Supervisor/TL/Coordinator password: Admin only */}
+                  {u.role !== 'Operator' && isAdmin && (
+                    <button className="header-btn" onClick={() => handleResetPassword(u._id, u.name)} title="Reset Password (Admin Only)" style={{ marginLeft: 8 }}>
+                      <i className="fas fa-key" style={{ color: 'var(--warning)', fontSize: 12 }}></i>
                     </button>
                   )}
                   <button className="header-btn" onClick={() => handleDelete(u._id)} title="Delete" style={{ marginLeft: 8 }}>

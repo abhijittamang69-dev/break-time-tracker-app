@@ -51,7 +51,24 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
-  // Auto-logout after 5 minutes of inactivity
+  // Heartbeat: check if device is still approved/active every 30 seconds
+  useEffect(() => {
+    if (!user || user.role === 'Admin') return;
+
+    const heartbeat = async () => {
+      try {
+        await getMe();
+      } catch (err) {
+        const msg = err.response?.data?.message;
+        if (msg === 'DEVICE_NOT_REGISTERED') {
+          logout();
+        }
+      }
+    };
+
+    const interval = setInterval(heartbeat, 30000); // every 30 seconds
+    return () => clearInterval(interval);
+  }, [user]);
   useEffect(() => {
     if (!user) return;
 

@@ -23,15 +23,27 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 responses - clear auth and reload to login
+// Handle 401 and device-deactivated responses
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+    const message = error.response?.data?.message;
+
+    if (status === 401) {
       storage.remove('token');
       storage.remove('user');
       window.location.reload();
     }
+
+    // Device deactivated or deleted by admin
+    if (status === 403 && message === 'DEVICE_NOT_REGISTERED') {
+      storage.remove('token');
+      storage.remove('user');
+      storage.remove('deviceToken');
+      window.location.reload();
+    }
+
     return Promise.reject(error);
   }
 );

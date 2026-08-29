@@ -118,11 +118,18 @@ const Devices = () => {
   const approvedDevices = getLatestPerUser(nonAdminDevices.filter(d => d.status === 'approved'));
   const rejectedDevices = getLatestPerUser(nonAdminDevices.filter(d => d.status === 'rejected'));
 
+  const DeviceIcon = ({ type }) => {
+    if (type === 'Android') return <i className="fab fa-android" style={{ color: '#3DDC84', marginRight: 4 }}></i>;
+    if (type === 'iPhone' || type === 'iPad' || type === 'Mac') return <i className="fab fa-apple" style={{ color: '#555', marginRight: 4 }}></i>;
+    if (type === 'PC') return <i className="fas fa-desktop" style={{ color: '#0078D4', marginRight: 4 }}></i>;
+    return null;
+  };
+
   const DeviceTable = ({ list, showApprove, showReject, showDeactivate, showActivate, showDelete, readOnly }) => (
     <div style={{ overflowX: 'auto' }}>
       <table className="data-table">
         <thead>
-          <tr><th>User</th><th>Device</th><th>Status</th><th>Registered</th>{!readOnly && <th>Actions</th>}</tr>
+          <tr><th>User</th><th>Device ID</th><th>Status</th><th>Registered</th>{!readOnly && <th>Actions</th>}</tr>
         </thead>
         <tbody>
           {list.length === 0 ? (
@@ -135,15 +142,16 @@ const Devices = () => {
                   <span style={{ fontSize: 11, color: 'var(--gray-500)' }}>{d.userId?.username || ''} · {d.userId?.role || ''}</span>
                 </td>
                 <td>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}>{d.deviceName || 'Unknown Device'}</div>
-                  <div style={{ fontSize: 11, color: 'var(--gray-500)' }}>
-                    {d.deviceType === 'Android' && <i className="fab fa-android" style={{ color: '#3DDC84', marginRight: 4 }}></i>}
-                    {d.deviceType === 'iPhone' && <i className="fab fa-apple" style={{ color: '#555', marginRight: 4 }}></i>}
-                    {d.deviceType === 'iPad' && <i className="fab fa-apple" style={{ color: '#555', marginRight: 4 }}></i>}
-                    {d.deviceType === 'Mac' && <i className="fab fa-apple" style={{ color: '#555', marginRight: 4 }}></i>}
-                    {d.deviceType === 'PC' && <i className="fas fa-desktop" style={{ color: '#0078D4', marginRight: 4 }}></i>}
-                    {d.deviceType || 'Unknown'}
+                  <div style={{ fontWeight: 600, fontSize: 13, fontFamily: 'monospace', color: 'var(--primary)' }}>{d.deviceToken || 'N/A'}</div>
+                  <div style={{ fontSize: 11, color: 'var(--gray-500)', marginTop: 2 }}>
+                    <DeviceIcon type={d.deviceType} />
+                    {d.deviceName || d.deviceType || 'Unknown'}
                   </div>
+                  {d.ipAddress && (
+                    <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2 }}>
+                      <i className="fas fa-network-wired" style={{ marginRight: 4 }}></i>IP: {d.ipAddress}
+                    </div>
+                  )}
                 </td>
                 <td>
                   {d.status === 'pending' && <span className="badge badge-blue"><i className="fas fa-hourglass-half" style={{ fontSize: 8 }}></i> Pending</span>}

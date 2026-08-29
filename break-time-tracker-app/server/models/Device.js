@@ -21,6 +21,14 @@ const deviceSchema = new mongoose.Schema({
     type: String,
     default: 'Unknown'
   },
+  ipAddress: {
+    type: String,
+    default: ''
+  },
+  userAgent: {
+    type: String,
+    default: 'Unknown'
+  },
   userAgent: {
     type: String,
     default: ''

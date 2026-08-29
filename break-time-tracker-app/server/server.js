@@ -13,6 +13,12 @@ const bcrypt = require('bcryptjs');
 
 const app = express();
 
+// Trust proxy headers (needed for req.ip behind Vercel/Render/nginx)
+app.set('trust proxy', true);
+
+app.use(cors());
+app.use(express.json());
+
 app.use(cors());
 app.use(express.json());
 

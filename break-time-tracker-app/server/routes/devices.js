@@ -6,6 +6,13 @@ const { auth } = require('../middleware/auth');
 const { isAdmin } = require('../middleware/role');
 const { getDeviceType } = require('../utils/device');
 
+function getClientIp(req) {
+  return req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+    || req.headers['x-real-ip']
+    || req.ip
+    || '';
+}
+
 // @route   GET /api/devices
 // @desc    Get all devices (for current user)
 // @access  Private
@@ -68,6 +75,7 @@ router.post('/register', auth, async (req, res) => {
   try {
     const { deviceToken, deviceName, userAgent } = req.body;
     const deviceType = getDeviceType(userAgent || req.headers['user-agent'] || '');
+    const ipAddress = getClientIp(req);
 
     if (!deviceToken) {
       return res.status(400).json({ message: 'Device token is required' });
@@ -89,6 +97,7 @@ router.post('/register', auth, async (req, res) => {
       device.deviceName = deviceName || device.deviceName;
       device.userAgent = userAgent || device.userAgent;
       device.deviceType = deviceType;
+      device.ipAddress = ipAddress;
       device.lastUsed = new Date();
       await device.save();
       return res.json({ message: 'Device registered successfully', device });
@@ -100,6 +109,7 @@ router.post('/register', auth, async (req, res) => {
       deviceToken,
       deviceName: deviceName || 'Unknown Device',
       deviceType,
+      ipAddress,
       userAgent: userAgent || req.headers['user-agent'] || '',
       lastUsed: new Date(),
       status: 'pending',

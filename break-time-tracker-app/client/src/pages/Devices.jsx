@@ -136,7 +136,14 @@ const Devices = () => {
                 </td>
                 <td>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{d.deviceName || 'Unknown Device'}</div>
-                  <div style={{ fontSize: 11, color: 'var(--gray-500)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.userAgent || ''}</div>
+                  <div style={{ fontSize: 11, color: 'var(--gray-500)' }}>
+                    {d.deviceType === 'Android' && <i className="fab fa-android" style={{ color: '#3DDC84', marginRight: 4 }}></i>}
+                    {d.deviceType === 'iPhone' && <i className="fab fa-apple" style={{ color: '#555', marginRight: 4 }}></i>}
+                    {d.deviceType === 'iPad' && <i className="fab fa-apple" style={{ color: '#555', marginRight: 4 }}></i>}
+                    {d.deviceType === 'Mac' && <i className="fab fa-apple" style={{ color: '#555', marginRight: 4 }}></i>}
+                    {d.deviceType === 'PC' && <i className="fas fa-desktop" style={{ color: '#0078D4', marginRight: 4 }}></i>}
+                    {d.deviceType || 'Unknown'}
+                  </div>
                 </td>
                 <td>
                   {d.status === 'pending' && <span className="badge badge-blue"><i className="fas fa-hourglass-half" style={{ fontSize: 8 }}></i> Pending</span>}

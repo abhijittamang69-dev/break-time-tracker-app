@@ -3,10 +3,13 @@ const bcrypt = require('bcryptjs');
 const router = express.Router();
 const User = require('../models/User');
 const { auth, generateToken } = require('../middleware/auth');
+const { getDeviceType } = require('../utils/device');
 
 router.post('/login', async (req, res) => {
   try {
     const { username, password, deviceToken, deviceName, userAgent } = req.body;
+    const deviceType = getDeviceType(userAgent || '');
+
     if (!username || !password) {
       return res.status(400).json({ message: 'Please provide username and password' });
     }
@@ -45,6 +48,7 @@ router.post('/login', async (req, res) => {
         device.lastUsed = new Date();
         if (deviceName) device.deviceName = deviceName;
         if (userAgent) device.userAgent = userAgent;
+        device.deviceType = deviceType;
         await device.save();
       } else {
         // Non-admin - check ownership and status
@@ -77,6 +81,7 @@ router.post('/login', async (req, res) => {
         device.lastUsed = new Date();
         if (deviceName) device.deviceName = deviceName;
         if (userAgent) device.userAgent = userAgent;
+        device.deviceType = deviceType;
         await device.save();
       }
     } else {
@@ -87,6 +92,7 @@ router.post('/login', async (req, res) => {
           userId: user._id,
           deviceToken,
           deviceName: deviceName || 'Unknown Device',
+          deviceType,
           userAgent: userAgent || '',
           lastUsed: new Date(),
           status: 'approved',
@@ -99,6 +105,7 @@ router.post('/login', async (req, res) => {
           userId: user._id,
           deviceToken,
           deviceName: deviceName || 'Unknown Device',
+          deviceType,
           userAgent: userAgent || '',
           lastUsed: new Date(),
           status: 'pending',

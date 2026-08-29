@@ -17,6 +17,10 @@ const deviceSchema = new mongoose.Schema({
     type: String,
     default: 'Unknown Device'
   },
+  deviceType: {
+    type: String,
+    default: 'Unknown'
+  },
   userAgent: {
     type: String,
     default: ''

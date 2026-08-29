@@ -4,6 +4,7 @@ const Device = require('../models/Device');
 const User = require('../models/User');
 const { auth } = require('../middleware/auth');
 const { isAdmin } = require('../middleware/role');
+const { getDeviceType } = require('../utils/device');
 
 // @route   GET /api/devices
 // @desc    Get all devices (for current user)
@@ -66,6 +67,7 @@ router.post('/cleanup', auth, isAdmin, async (req, res) => {
 router.post('/register', auth, async (req, res) => {
   try {
     const { deviceToken, deviceName, userAgent } = req.body;
+    const deviceType = getDeviceType(userAgent || req.headers['user-agent'] || '');
 
     if (!deviceToken) {
       return res.status(400).json({ message: 'Device token is required' });
@@ -86,6 +88,7 @@ router.post('/register', auth, async (req, res) => {
       device.userId = req.user._id;
       device.deviceName = deviceName || device.deviceName;
       device.userAgent = userAgent || device.userAgent;
+      device.deviceType = deviceType;
       device.lastUsed = new Date();
       await device.save();
       return res.json({ message: 'Device registered successfully', device });
@@ -96,6 +99,7 @@ router.post('/register', auth, async (req, res) => {
       userId: req.user._id,
       deviceToken,
       deviceName: deviceName || 'Unknown Device',
+      deviceType,
       userAgent: userAgent || req.headers['user-agent'] || '',
       lastUsed: new Date(),
       status: 'pending',

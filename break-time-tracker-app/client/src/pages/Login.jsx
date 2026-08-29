@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { login } from '../api/auth';
 import storage from '../utils/storage';
+import { getDeviceName, generateDeviceId } from '../utils/device';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -19,11 +20,11 @@ const Login = () => {
     try {
       let deviceToken = storage.get('deviceToken');
       if (!deviceToken) {
-        deviceToken = 'dev_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        deviceToken = generateDeviceId();
         storage.set('deviceToken', deviceToken);
       }
 
-      const deviceName = navigator.userAgent.split(')')[0] + ')' || 'Unknown Device';
+      const deviceName = getDeviceName();
       const userAgent = navigator.userAgent;
 
       const res = await login(username, password, deviceToken, deviceName, userAgent);

@@ -24,9 +24,6 @@ router.put('/', auth, isAdmin, async (req, res) => {
       settings = new Setting();
     }
     const { maxBreakMinutes, maxBreaksPerShift, lateThresholdMinutes, defaultBreakDuration, reminderMinutesBeforeEnd } = req.body;
-    // NOTE: qrCodeValue and qrGeneratedAt are system-managed only.
-    // They are auto-generated daily at 6:00 AM by the server cron job.
-    // Admin cannot manually change them.
     if (maxBreakMinutes !== undefined) settings.maxBreakMinutes = maxBreakMinutes;
     if (maxBreaksPerShift !== undefined) settings.maxBreaksPerShift = maxBreaksPerShift;
     if (lateThresholdMinutes !== undefined) settings.lateThresholdMinutes = lateThresholdMinutes;

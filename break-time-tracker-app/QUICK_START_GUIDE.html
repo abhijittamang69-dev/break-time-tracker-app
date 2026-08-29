@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Break Time Tracker — Quick Start Guide</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <style>
+    :root {
+      --primary: #1a56db;
+      --success: #0e9f6e;
+      --warning: #f05252;
+      --orange: #ff5a1f;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+      --radius: 12px;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-800);
+      line-height: 1.6;
+    }
+    .container { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
+
+    header {
+      text-align: center;
+      padding: 36px 20px;
+      background: linear-gradient(135deg, #1a56db, #0f2c6d);
+      color: white;
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+    header h1 { font-size: 28px; font-weight: 800; }
+    header p { opacity: 0.85; margin-top: 6px; }
+
+    .section { margin-top: 36px; }
+    .section-title {
+      font-size: 20px; font-weight: 700; color: var(--gray-900);
+      margin-bottom: 18px; display: flex; align-items: center; gap: 10px;
+    }
+    .section-title i { color: var(--primary); }
+
+    /* Role pills */
+    .roles { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+    .role {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 18px; border-radius: 30px; font-size: 14px; font-weight: 600;
+      background: white; border: 1px solid var(--gray-100); box-shadow: var(--shadow);
+    }
+    .role i { font-size: 16px; }
+    .role.operator { color: var(--success); border-color: #a7f3d0; background: #ecfdf5; }
+    .role.approver { color: var(--primary); border-color: #bfdbfe; background: #eff6ff; }
+    .role.admin { color: var(--orange); border-color: #fed7aa; background: #fff7ed; }
+
+    /* Mermaid diagram container */
+    .diagram-box {
+      background: white; border-radius: var(--radius); padding: 24px;
+      border: 1px solid var(--gray-100); box-shadow: var(--shadow);
+      overflow-x: auto;
+    }
+
+    /* Quick cards */
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    .card {
+      background: white; border-radius: var(--radius); padding: 22px;
+      border: 1px solid var(--gray-100); box-shadow: var(--shadow);
+    }
+    .card h4 { font-size: 15px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .card h4 i { color: var(--primary); }
+    .card ul { list-style: none; }
+    .card li { font-size: 13px; color: var(--gray-700); padding: 5px 0; display: flex; align-items: flex-start; gap: 8px; }
+    .card li i { color: var(--success); font-size: 12px; margin-top: 4px; }
+
+    .tip {
+      background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius);
+      padding: 16px 20px; display: flex; align-items: flex-start; gap: 12px;
+    }
+    .tip i { color: var(--primary); font-size: 20px; }
+    .tip strong { color: var(--gray-900); }
+    .tip span { font-size: 13px; color: var(--gray-700); }
+
+    footer { text-align: center; padding: 24px; color: #9ca3af; font-size: 12px; margin-top: 32px; }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 22px; }
+      .roles { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1><i class="fas fa-clock"></i> Break Time Tracker</h1>
+  <p>Quick Start Guide — How to Use the App</p>
+</header>
+
+<div class="container">
+
+  <!-- Roles -->
+  <div class="section">
+    <h2 class="section-title"><i class="fas fa-users"></i> User Roles</h2>
+    <div class="roles">
+      <div class="role operator"><i class="fas fa-hard-hat"></i> Operator</div>
+      <div class="role approver"><i class="fas fa-user-shield"></i> Supervisor / TL / Coordinator</div>
+      <div class="role admin"><i class="fas fa-user-cog"></i> Admin</div>
+    </div>
+  </div>
+
+  <!-- Flow Diagram -->
+  <div class="section">
+    <h2 class="section-title"><i class="fas fa-project-diagram"></i> Break Request Flow</h2>
+    <div class="diagram-box">
+      <pre class="mermaid">
+flowchart TD
+    A["<i class='fas fa-sign-in-alt'></i> Login<br/><small>All users</small>"] --> B["<i class='fas fa-qrcode'></i> Scan QR Code<br/><small>Operator</small>"]
+    B --> C["<i class='fas fa-paper-plane'></i> Request Break<br/><small>Operator</small>"]
+    C --> D{"<i class='fas fa-user-check'></i> Pending Approval<br/><small>Supervisor / TL / Coordinator</small>"}
+    D -->|Approve| E["<i class='fas fa-play-circle'></i> Break Starts<br/><small>Auto timer begins</small>"]
+    D -->|Reject| F["<i class='fas fa-times-circle'></i> Request Denied<br/><small>Operator notified</small>"]
+    E --> G["<i class='fas fa-bell'></i> 5-Min Reminder<br/><small>Auto alert</small>"]
+    G --> H["<i class='fas fa-stop-circle'></i> Scan QR to End<br/><small>Operator returns</small>"]
+    H --> I["<i class='fas fa-check-circle'></i> Break Completed<br/><small>Duration recorded</small>"]
+
+    style A fill:#eff6ff,stroke:#1a56db,stroke-width:2px,color:#1f2937
+    style B fill:#ecfdf5,stroke:#0e9f6e,stroke-width:2px,color:#1f2937
+    style C fill:#ecfdf5,stroke:#0e9f6e,stroke-width:2px,color:#1f2937
+    style D fill:#fff7ed,stroke:#ff5a1f,stroke-width:2px,color:#1f2937
+    style E fill:#e0e7ff,stroke:#1a56db,stroke-width:2px,color:#1f2937
+    style F fill:#fde8e8,stroke:#f05252,stroke-width:2px,color:#1f2937
+    style G fill:#fef3c7,stroke:#f59e0b,stroke-width:2px,color:#1f2937
+    style H fill:#ecfdf5,stroke:#0e9f6e,stroke-width:2px,color:#1f2937
+    style I fill:#d1fae5,stroke:#0e9f6e,stroke-width:2px,color:#1f2937
+      </pre>
+    </div>
+  </div>
+
+  <!-- Step-by-step -->
+  <div class="section">
+    <h2 class="section-title"><i class="fas fa-list-ol"></i> Step-by-Step</h2>
+    <div class="cards">
+      <div class="card">
+        <h4><i class="fas fa-sign-in-alt"></i> 1. Login</h4>
+        <ul>
+          <li><i class="fas fa-check"></i> Open the app in your browser</li>
+          <li><i class="fas fa-check"></i> Enter your username & password</li>
+          <li><i class="fas fa-check"></i> Same page for all roles</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4><i class="fas fa-qrcode"></i> 2. Request Break (Operator)</h4>
+        <ul>
+          <li><i class="fas fa-check"></i> Go to <strong>Scan</strong> page</li>
+          <li><i class="fas fa-check"></i> Tap "Request Break"</li>
+          <li><i class="fas fa-check"></i> Scan the QR code at break area</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4><i class="fas fa-user-check"></i> 3. Approve (Supervisor)</h4>
+        <ul>
+          <li><i class="fas fa-check"></i> See pending request on <strong>Dashboard</strong></li>
+          <li><i class="fas fa-check"></i> Set break duration</li>
+          <li><i class="fas fa-check"></i> Click <strong>Approve</strong> or <strong>Reject</strong></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4><i class="fas fa-bell"></i> 4. During Break</h4>
+        <ul>
+          <li><i class="fas fa-check"></i> Timer starts automatically</li>
+          <li><i class="fas fa-check"></i> 5-minute reminder before end</li>
+          <li><i class="fas fa-check"></i> Status shows "On Break"</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4><i class="fas fa-stop-circle"></i> 5. End Break (Operator)</h4>
+        <ul>
+          <li><i class="fas fa-check"></i> Return to break area</li>
+          <li><i class="fas fa-check"></i> Scan QR code again</li>
+          <li><i class="fas fa-check"></i> Or tap "End Break" on Dashboard</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4><i class="fas fa-chart-bar"></i> 6. Reports</h4>
+        <ul>
+          <li><i class="fas fa-check"></i> View daily break stats</li>
+          <li><i class="fas fa-check"></i> Check late returns</li>
+          <li><i class="fas fa-check"></i> Export staff summaries</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tip -->
+  <div class="section">
+    <div class="tip">
+      <i class="fas fa-lightbulb"></i>
+      <div>
+        <strong>Pro Tip:</strong>
+        <span> You can also request and end breaks directly from the <strong>Dashboard</strong> without scanning a QR code. The QR just makes it faster!</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <i class="fas fa-clock"></i> Break Time Tracker App — Quick Start Guide
+</footer>
+
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'base', flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' } });
+</script>
+
+</body>
+</html>

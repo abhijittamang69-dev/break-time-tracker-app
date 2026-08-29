@@ -22,31 +22,6 @@ const getShiftFromTime = (date) => {
   return 'Night';
 };
 
-// Break area coordinates: 25°14'28.90"N 51°28'31.51"E
-const BREAK_AREA_LAT = 25 + 14/60 + 28.90/3600;
-const BREAK_AREA_LNG = 51 + 28/60 + 31.51/3600;
-const MAX_DISTANCE_METERS = 10;
-
-const getDistanceMeters = (lat1, lng1, lat2, lng2) => {
-  const R = 6371000;
-  const toRad = (deg) => deg * (Math.PI / 180);
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a = Math.sin(dLat / 2) ** 2 +
-            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-};
-
-const validateGeolocation = (lat, lng) => {
-  if (lat == null || lng == null) return { valid: false, message: 'Location required. Please enable GPS.' };
-  const distance = getDistanceMeters(lat, lng, BREAK_AREA_LAT, BREAK_AREA_LNG);
-  if (distance > MAX_DISTANCE_METERS) {
-    return { valid: false, message: `You are ${Math.round(distance)}m away from the break area. Must be within ${MAX_DISTANCE_METERS}m.` };
-  }
-  return { valid: true, distance };
-};
-
 // Auto-approve pending breaks older than 45 seconds
 const AUTO_APPROVE_SECONDS = 45;
 const autoApprovePendingBreaks = async () => {
@@ -137,16 +112,9 @@ router.get('/pending', auth, async (req, res) => {
 
 router.post('/request', auth, async (req, res) => {
   try {
-    const { breakNumber, requestedDuration, mode, latitude, longitude } = req.body;
+    const { breakNumber, requestedDuration, latitude, longitude } = req.body;
     const userId = req.user._id;
     const { start, end } = getTodayRange();
-
-    if (mode === 'qr') {
-      const geo = validateGeolocation(latitude, longitude);
-      if (!geo.valid) {
-        return res.status(403).json({ message: geo.message });
-      }
-    }
 
     const existingBreak = await Break.findOne({
       userId: userId,
@@ -160,21 +128,6 @@ router.post('/request', auth, async (req, res) => {
           ? 'You already have a pending break request'
           : 'You are already on a break'
       });
-    }
-
-    const allTodayBreaks = await Break.find({
-      userId: userId,
-      date: { $gte: start, $lt: end }
-    });
-
-    if (allTodayBreaks.length > 0) {
-      const existingMode = allTodayBreaks[0].mode;
-      if (mode && mode !== existingMode) {
-        const modeLabel = existingMode === 'qr' ? 'QR Code' : 'Manual';
-        return res.status(400).json({
-          message: `You are already using ${modeLabel} mode this shift. You can only use one option per shift.`
-        });
-      }
     }
 
     const settings = await Setting.findOne();
@@ -210,7 +163,6 @@ router.post('/request', auth, async (req, res) => {
       status: 'pending',
       requestedAt: now,
       approvedDuration: requestedDuration || defaultDuration,
-      mode: mode || 'manual',
       latitude: latitude || null,
       longitude: longitude || null
     });
@@ -323,7 +275,6 @@ router.get('/reports', auth, async (req, res) => {
     const staffStats = users.map(user => {
       const userBreaks = todayBreaks.filter(b => b.userId.toString() === user._id.toString());
       const userCompleted = userBreaks.filter(b => b.status === 'completed' || b.status === 'late');
-      // Auto-detect shift from the first break's requestedAt, or current time if no breaks
       const detectedShift = userBreaks.length > 0
         ? getShiftFromTime(userBreaks[0].requestedAt)
         : getShiftFromTime(new Date());
@@ -340,7 +291,6 @@ router.get('/reports', auth, async (req, res) => {
       };
     });
 
-    // Add auto-detected shift to each break record for the report
     const allBreaksWithShift = todayBreaks.map(b => ({
       ...b.toObject(),
       shift: getShiftFromTime(b.requestedAt)

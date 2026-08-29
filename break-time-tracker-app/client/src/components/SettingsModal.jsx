@@ -14,9 +14,7 @@ const SettingsModal = ({ isAdmin, onClose }) => {
     maxBreaksPerShift: 3,
     defaultBreakDuration: 15,
     reminderMinutesBeforeEnd: 5,
-    lateThresholdMinutes: 30,
-    qrCodeValue: 'BREAK_TIME_QR_2024',
-    qrGeneratedAt: null
+    lateThresholdMinutes: 30
   });
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('password');
@@ -66,51 +64,6 @@ const SettingsModal = ({ isAdmin, onClose }) => {
     } finally { setSettingsLoading(false); }
   };
 
-  // Download QR image with file picker using File System Access API
-  const saveQRImage = async () => {
-    try {
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(settings.qrCodeValue)}`;
-      const response = await fetch(qrUrl);
-      const blob = await response.blob();
-
-      // Use File System Access API if available (Chrome/Edge)
-      if (window.showSaveFilePicker) {
-        const handle = await window.showSaveFilePicker({
-          suggestedName: `break-qr-${new Date().toISOString().split('T')[0]}.png`,
-          types: [{
-            description: 'PNG Image',
-            accept: { 'image/png': ['.png'] }
-          }]
-        });
-        const writable = await handle.createWritable();
-        await writable.write(blob);
-        await writable.close();
-        setMessage('QR code saved to your chosen location!');
-      } else {
-        // Fallback for browsers without File System Access API
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `break-qr-${new Date().toISOString().split('T')[0]}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        setMessage('QR code downloaded!');
-      }
-    } catch (err) {
-      // User cancelled picker or other error
-      if (err.name !== 'AbortError') {
-        setError('Failed to save QR code image.');
-      }
-    }
-  };
-
-  const fmtDate = (d) => {
-    if (!d) return 'Not yet generated';
-    return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-  };
-
   return (
     <div className="modal-overlay active" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal animate-slide-up">
@@ -125,11 +78,6 @@ const SettingsModal = ({ isAdmin, onClose }) => {
           {isAdmin && (
             <button className={`modal-tab ${activeTab === 'system' ? 'active' : ''}`} onClick={() => { setActiveTab('system'); setMessage(''); setError(''); }}>
               <i className="fas fa-sliders-h"></i> System
-            </button>
-          )}
-          {isAdmin && (
-            <button className={`modal-tab ${activeTab === 'qr' ? 'active' : ''}`} onClick={() => { setActiveTab('qr'); setMessage(''); setError(''); }}>
-              <i className="fas fa-qrcode"></i> QR
             </button>
           )}
         </div>
@@ -202,36 +150,6 @@ const SettingsModal = ({ isAdmin, onClose }) => {
             </div>
           </div>
         )}
-
-        {activeTab === 'qr' && (
-          <div>
-            <div className="modal-body" style={{ textAlign: 'center' }}>
-              <div className="form-group" style={{ textAlign: 'left' }}>
-                <label>QR Code Value</label>
-                <input type="text" value={settings.qrCodeValue} readOnly style={{ ...inputStyle, background: 'var(--gray-100)' }} />
-                <div style={{ fontSize: 12, color: 'var(--gray-500)', marginTop: 6 }}>
-                  <i className="fas fa-info-circle"></i> QR auto-generates daily at 6:00 AM. Last updated: {fmtDate(settings.qrGeneratedAt)}
-                </div>
-              </div>
-              <div className="qr-preview">
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(settings.qrCodeValue)}`}
-                  alt="Break QR Code"
-                  style={{ width: 200, height: 200 }}
-                />
-                <div style={{ fontSize: 12, color: 'var(--gray-500)', marginTop: 8 }}>Scan this QR code to request a break</div>
-              </div>
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-                <button type="button" className="btn btn-primary" onClick={saveQRImage} style={{ width: 'auto', padding: '10px 20px' }}>
-                  <i className="fas fa-download"></i> Save QR Image
-                </button>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={onClose} style={{ width: 'auto', padding: '10px 20px' }}>Close</button>
-            </div>
-          </div>
-        )}
       </div>
       <style>{`
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
@@ -260,7 +178,6 @@ const SettingsModal = ({ isAdmin, onClose }) => {
         .alert { padding: 14px 16px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 10px; font-size: 14px; }
         .alert-success { background: var(--success-light); color: var(--success); border: 1px solid #bcf0da; }
         .alert-warning { background: var(--warning-light); color: var(--warning); border: 1px solid #fbd5d5; }
-        .qr-preview { padding: 20px; background: var(--gray-50); border-radius: 12px; border: 2px dashed var(--gray-300); margin-bottom: 16px; }
 
         @media (prefers-color-scheme: dark) {
           .modal { background: var(--gray-100); }
@@ -278,7 +195,6 @@ const SettingsModal = ({ isAdmin, onClose }) => {
           .input-wrapper i { color: var(--gray-500); }
           .alert-success { border-color: #14532d; }
           .alert-warning { border-color: #7f1d1d; }
-          .qr-preview { background: var(--gray-200); border-color: var(--gray-600); }
         }
       `}</style>
     </div>

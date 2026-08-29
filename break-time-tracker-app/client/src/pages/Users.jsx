@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getUsers, createUser, deleteUser } from '../api/users';
+import { getUsers, createUser, updateUser, deleteUser } from '../api/users';
 import { resetPassword } from '../api/auth';
 import { useAuth } from '../context/AuthContext';
 import Toast from '../components/Toast';
@@ -9,10 +9,14 @@ const Users = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
   const [toast, setToast] = useState(null);
   const [formData, setFormData] = useState({ name: '', username: '', password: 'password123', role: 'Operator', shift: 'Morning' });
+  const [editFormData, setEditFormData] = useState({ name: '', username: '', role: 'Operator', shift: 'Morning' });
 
   const isApprover = ['Supervisor', 'Team Leader', 'Coordinator', 'Admin'].includes(currentUser?.role);
+  const isAdmin = currentUser?.role === 'Admin';
 
   useEffect(() => { fetchUsers(); }, []);
 
@@ -34,6 +38,30 @@ const Users = () => {
       fetchUsers();
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to add employee', 'error');
+    }
+  };
+
+  const handleEdit = (user) => {
+    setEditingUser(user);
+    setEditFormData({
+      name: user.name || '',
+      username: user.username || '',
+      role: user.role || 'Operator',
+      shift: user.shift || 'Morning'
+    });
+    setShowEdit(true);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await updateUser(editingUser._id, editFormData);
+      showToast('Employee updated successfully', 'success');
+      setShowEdit(false);
+      setEditingUser(null);
+      fetchUsers();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to update employee', 'error');
     }
   };
 
@@ -111,6 +139,11 @@ const Users = () => {
               </div>
               {isApprover && u._id !== currentUser?.id && u.role !== 'Admin' && (
                 <>
+                  {isAdmin && (
+                    <button className="header-btn" onClick={() => handleEdit(u)} title="Edit" style={{ marginLeft: 8 }}>
+                      <i className="fas fa-edit" style={{ color: 'var(--primary)', fontSize: 12 }}></i>
+                    </button>
+                  )}
                   {u.role === 'Operator' && (
                     <button className="header-btn" onClick={() => handleResetPassword(u._id, u.name)} title="Reset Password" style={{ marginLeft: 8 }}>
                       <i className="fas fa-key" style={{ color: 'var(--primary)', fontSize: 12 }}></i>
@@ -125,6 +158,8 @@ const Users = () => {
           ))}
         </div>
       </div>
+
+      {/* Add Employee Modal */}
       {showAdd && (
         <div className="modal-overlay active" onClick={(e) => e.target === e.currentTarget && setShowAdd(false)}>
           <div className="modal animate-slide-up">
@@ -183,6 +218,60 @@ const Users = () => {
           </div>
         </div>
       )}
+
+      {/* Edit Employee Modal */}
+      {showEdit && editingUser && (
+        <div className="modal-overlay active" onClick={(e) => e.target === e.currentTarget && setShowEdit(false)}>
+          <div className="modal animate-slide-up">
+            <div className="modal-header">
+              <h3><i className="fas fa-user-edit" style={{ marginRight: 8, color: 'var(--primary)' }}></i>Edit Employee</h3>
+              <button className="modal-close" onClick={() => setShowEdit(false)}><i className="fas fa-times"></i></button>
+            </div>
+            <form onSubmit={handleEditSubmit}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>Full Name</label>
+                  <div className="input-wrapper">
+                    <i className="fas fa-user"></i>
+                    <input type="text" required value={editFormData.name} onChange={e => setEditFormData({ ...editFormData, name: e.target.value })} placeholder="Enter full name" />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Username</label>
+                  <div className="input-wrapper">
+                    <i className="fas fa-id-card"></i>
+                    <input type="text" required value={editFormData.username} onChange={e => setEditFormData({ ...editFormData, username: e.target.value })} placeholder="Enter username" />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Role</label>
+                  <select value={editFormData.role} onChange={e => setEditFormData({ ...editFormData, role: e.target.value })} style={selStyle}>
+                    <option value="Operator">Operator</option>
+                    <option value="Team Leader">Team Leader</option>
+                    <option value="Supervisor">Supervisor</option>
+                    <option value="Coordinator">Coordinator</option>
+                    <option value="Admin">Admin</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Shift</label>
+                  <select value={editFormData.shift} onChange={e => setEditFormData({ ...editFormData, shift: e.target.value })} style={selStyle}>
+                    <option value="Morning">Morning</option>
+                    <option value="Afternoon">Afternoon</option>
+                    <option value="Night">Night</option>
+                    <option value="Rotating">Rotating</option>
+                  </select>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowEdit(false)} style={{ width: 'auto', padding: '10px 20px' }}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ width: 'auto', padding: '10px 20px' }}><i className="fas fa-save"></i> Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <style>{`
         .page-title { font-size: 22px; font-weight: 700; color: var(--gray-900); margin-bottom: 4px; }
         .page-subtitle { font-size: 13px; color: var(--gray-500); margin-bottom: 20px; }

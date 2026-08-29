@@ -163,7 +163,7 @@ const Scan = () => {
         setActionLoading(false);
         return;
       }
-      await requestBreak(completed.length + 1, selectedDuration, 'manual', userLocation[0], userLocation[1]);
+      await requestBreak(completed.length + 1, selectedDuration, userLocation[0], userLocation[1]);
       showToast('Break requested! Waiting for supervisor approval.', 'success');
       setShowDurationOptions(false);
       checkBreakStatus();

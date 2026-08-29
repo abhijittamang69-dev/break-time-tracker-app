@@ -102,7 +102,7 @@ const Layout = () => {
 
   const allNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-pie', path: '/' },
-    { id: 'scan', label: 'Break', icon: 'fa-qrcode', path: '/scan' },
+    { id: 'scan', label: 'Break', icon: 'fa-coffee', path: '/scan' },
     { id: 'history', label: 'History', icon: 'fa-history', path: '/history' },
     { id: 'reports', label: 'Reports', icon: 'fa-file-alt', path: '/reports' },
     { id: 'users', label: 'Users', icon: 'fa-users', path: '/users', approverOnly: true },
@@ -372,9 +372,6 @@ const Layout = () => {
           .nav-item:hover { color: var(--gray-700); }
           .pending-badge { border-color: var(--gray-800); }
           .nav-badge { border-color: var(--gray-800); }
-        }
-        @media (max-width: 480px) {
-        }
         }
         @media (max-width: 480px) {
           .main-content {

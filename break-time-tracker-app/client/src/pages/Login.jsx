@@ -17,20 +17,17 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-      // Generate or retrieve device token
       let deviceToken = storage.get('deviceToken');
       if (!deviceToken) {
         deviceToken = 'dev_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         storage.set('deviceToken', deviceToken);
       }
 
-      // Get device info
       const deviceName = navigator.userAgent.split(')')[0] + ')' || 'Unknown Device';
       const userAgent = navigator.userAgent;
 
       const res = await login(username, password, deviceToken, deviceName, userAgent);
       authLogin(res.data.token, res.data.user);
-      // Clear any previous device errors
       storage.remove('deviceError');
       storage.remove('deviceErrorDesc');
       navigate('/');
@@ -55,7 +52,7 @@ const Login = () => {
         <div className="login-logo">
           <i className="fas fa-clock"></i>
           <h1>Break Time Tracker App</h1>
-          <p>QR Code Break Time Management</p>
+          <p>Smart Break Time Management</p>
         </div>
         {error && (
           <div className="alert alert-warning" style={{ marginBottom: 20 }}>
@@ -111,9 +108,6 @@ const Login = () => {
           .input-wrapper input { background: var(--gray-200); border-color: var(--gray-600); color: var(--gray-800); }
           .input-wrapper input:focus { background: var(--gray-100); }
           .input-wrapper i { color: var(--gray-500); }
-        }
-        @media (max-width: 480px) { .login-card { padding: 28px 20px; } }
-        }
         }
         @media (max-width: 480px) { .login-card { padding: 28px 20px; } }
       `}</style>

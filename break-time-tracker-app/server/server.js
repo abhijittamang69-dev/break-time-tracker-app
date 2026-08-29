@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const dotenv = require('dotenv');
-const cron = require('node-cron');
 
 dotenv.config();
 
@@ -56,50 +55,6 @@ const seedData = async () => {
   }
 };
 
-// Generate a new random QR code value
-const generateQRValue = () => 'BREAK_QR_' + Math.random().toString(36).substring(2, 10).toUpperCase();
-
-// Check if two dates are the same calendar day
-const isSameDay = (d1, d2) => {
-  if (!d1 || !d2) return false;
-  const a = new Date(d1);
-  const b = new Date(d2);
-  return a.getFullYear() === b.getFullYear() &&
-         a.getMonth() === b.getMonth() &&
-         a.getDate() === b.getDate();
-};
-
-// Auto-generate QR code daily at 6:00 AM
-const autoGenerateQR = async () => {
-  try {
-    let settings = await Setting.findOne();
-    if (!settings) {
-      settings = await Setting.create({});
-    }
-    const today = new Date();
-    // Only generate if not already generated today
-    if (!isSameDay(today, settings.qrGeneratedAt)) {
-      settings.qrCodeValue = generateQRValue();
-      settings.qrGeneratedAt = today;
-      await settings.save();
-      console.log(`[QR Auto-Gen] New QR code generated at ${today.toISOString()}: ${settings.qrCodeValue}`);
-    } else {
-      console.log(`[QR Auto-Gen] QR already generated today at ${settings.qrGeneratedAt}. Skipping.`);
-    }
-  } catch (error) {
-    console.error('[QR Auto-Gen] Error generating QR code:', error);
-  }
-};
-
-// Schedule QR generation every day at 6:00 AM server time
-cron.schedule('0 6 * * *', () => {
-  console.log('[Cron] Running 6:00 AM QR auto-generation...');
-  autoGenerateQR();
-}, {
-  scheduled: true,
-  timezone: 'Asia/Qatar' // Adjust to your local timezone if needed
-});
-
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/dist')));
   app.get('*', (req, res) => {
@@ -118,9 +73,6 @@ const startServer = async () => {
   try {
     await connectDB();
     await seedData();
-
-    // Also run QR generation check on startup (in case server was down at 6 AM)
-    await autoGenerateQR();
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

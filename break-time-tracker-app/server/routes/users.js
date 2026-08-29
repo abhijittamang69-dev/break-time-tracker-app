@@ -49,6 +49,43 @@ router.post('/', auth, isApprover, async (req, res) => {
   }
 });
 
+// @route   PUT /api/users/:id
+// @desc    Update user details (Admin only)
+// @access  Private (Admin)
+router.put('/:id', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'Admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const { name, username, role, shift } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check username uniqueness if changing
+    if (username && username.toLowerCase() !== user.username) {
+      const existing = await User.findOne({ username: username.toLowerCase() });
+      if (existing) {
+        return res.status(400).json({ message: 'Username already exists' });
+      }
+      user.username = username.toLowerCase();
+    }
+
+    if (name) user.name = name;
+    if (role) user.role = role;
+    if (shift) user.shift = shift;
+
+    await user.save();
+    const userResponse = await User.findById(user._id).select('-password');
+    res.json(userResponse);
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // @route   DELETE /api/users/:id
 // @desc    Delete user (Admin or Supervisor/Team Leader/Coordinator)
 // @access  Private (Admin or Approver)

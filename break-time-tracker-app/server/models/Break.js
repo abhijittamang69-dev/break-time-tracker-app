@@ -68,11 +68,6 @@ const breakSchema = new mongoose.Schema({
     type: Number,
     default: null
   },
-  mode: {
-    type: String,
-    enum: ['qr', 'manual'],
-    default: 'manual'
-  },
   latitude: {
     type: Number,
     default: null

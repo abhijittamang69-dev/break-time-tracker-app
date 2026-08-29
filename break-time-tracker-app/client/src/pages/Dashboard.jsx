@@ -44,8 +44,6 @@ const Dashboard = () => {
   const myActive = myBreaks.find(b => b.status === 'active');
   const myPending = myBreaks.find(b => b.status === 'pending');
 
-  const currentMode = myBreaks.length > 0 ? myBreaks[0].mode : null;
-
   const modeMaxBreaks = settings.maxBreaksPerShift || 3;
   const modeDefaultDuration = settings.defaultBreakDuration || 15;
   const modeMaxMinutes = settings.maxBreakMinutes || 60;
@@ -174,15 +172,13 @@ const Dashboard = () => {
            <span className="badge badge-success"><i className="fas fa-check"></i> Available</span>}
         </div>
         <div className="card-body">
-          {currentMode && (
-            <div className={`mode-banner ${currentMode}`}>
-              <i className={`fas ${currentMode === 'qr' ? 'fa-qrcode' : 'fa-hand-pointer'}`}></i>
-              <div>
-                <div className="mode-title">{currentMode === 'qr' ? 'QR Code Mode' : 'Manual Mode'}</div>
-                <div className="mode-sub">{modeDefaultDuration} min each · {modeMaxBreaks} breaks per shift ({modeMaxMinutes} min total)</div>
-              </div>
+          <div className="mode-banner">
+            <i className="fas fa-hand-pointer"></i>
+            <div>
+              <div className="mode-title">Manual Mode</div>
+              <div className="mode-sub">{modeDefaultDuration} min each · {modeMaxBreaks} breaks per shift ({modeMaxMinutes} min total)</div>
             </div>
-          )}
+          </div>
           {myActive ? (
             <>
               <div className="break-timer">
@@ -199,9 +195,9 @@ const Dashboard = () => {
                 </div>
               )}
               <div style={{ marginTop: 16 }} className="info-box">
-                <i className="fas fa-qrcode info-box-icon"></i>
+                <i className="fas fa-hand-pointer info-box-icon"></i>
                 <span className="info-box-text">
-                  Go to the <strong>Scan</strong> page and scan the QR code to end your break.
+                  Go to the <strong>Break</strong> page to end your break.
                 </span>
               </div>
             </>
@@ -229,9 +225,9 @@ const Dashboard = () => {
               </div>
               {canRequestBreak ? (
                 <div style={{ marginBottom: 12 }} className="info-box">
-                  <i className="fas fa-qrcode info-box-icon"></i>
+                  <i className="fas fa-hand-pointer info-box-icon"></i>
                   <span className="info-box-text">
-                    Go to the <strong>Scan</strong> page and scan the QR code to request a break.
+                    Go to the <strong>Break</strong> page to request a break.
                   </span>
                 </div>
               ) : (
@@ -267,9 +263,6 @@ const Dashboard = () => {
                       <td>{fmtTime(b.requestedAt)}</td>
                       <td>
                         <span style={{ fontWeight: 600, fontSize: 13 }}>{b.approvedDuration || modeDefaultDuration} min</span>
-                        <span className={`badge ${b.mode === 'qr' ? 'badge-blue' : 'badge-gray'}`} style={{ marginLeft: 6, fontSize: 10 }}>
-                          {b.mode === 'qr' ? 'QR' : 'Manual'}
-                        </span>
                       </td>
                       <td>
                         <button className="btn btn-success" onClick={() => handleApprove(b._id)} disabled={approvingId === b._id} style={{ width: 'auto', padding: '10px 16px', fontSize: 13, marginRight: 6 }}>
@@ -352,9 +345,7 @@ const Dashboard = () => {
         .badge-warning { background: var(--warning-light); color: var(--warning); }
         .badge-orange { background: var(--orange-light); color: var(--orange); }
         .badge-gray { background: var(--gray-100); color: var(--gray-600); }
-        .mode-banner { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--radius-sm); margin-bottom: 16px; font-size: 14px; }
-        .mode-banner.qr { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary-light); }
-        .mode-banner.manual { background: var(--gray-100); color: var(--gray-700); border: 1px solid var(--gray-200); }
+        .mode-banner { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--radius-sm); margin-bottom: 16px; font-size: 14px; background: var(--gray-100); color: var(--gray-700); border: 1px solid var(--gray-200); }
         .mode-banner i { font-size: 20px; }
         .mode-title { font-weight: 700; font-size: 14px; }
         .mode-sub { font-size: 12px; opacity: 0.8; margin-top: 2px; }
@@ -396,7 +387,7 @@ const Dashboard = () => {
           .data-table th { border-bottom-color: var(--gray-600); color: var(--gray-500); }
           .data-table td { border-bottom-color: var(--gray-700); color: var(--gray-700); }
           .data-table tr:hover td { background: var(--gray-200); }
-          .mode-banner.manual { background: var(--gray-200); color: var(--gray-700); border-color: var(--gray-600); }
+          .mode-banner { background: var(--gray-200); color: var(--gray-700); border-color: var(--gray-600); }
           .alert-warning { background: var(--warning-light); color: var(--warning); border-color: #7f1d1d; }
           .info-box { background: var(--primary-light); border-color: var(--primary-light); }
           .info-box-text { color: var(--primary); }
@@ -404,7 +395,7 @@ const Dashboard = () => {
           .progress-header span:last-child { color: var(--gray-500); }
           .progress-bar { background: var(--gray-200); }
         }
-        @media (max-width: 480px) { .stats-grid { gap: 8px; } .stat-card { padding: 12px; } .stat-value { font-size: 20px; } .timer-value { font-size: 36px; } }
+        @media (max-width: 480px) { .stats-grid { gap: 8px; } .stat-card { padding: 12px; } .stat-value { fontSize: 20px; } .timer-value { font-size: 36px; } }
       `}</style>
     </div>
   );

@@ -24,10 +24,19 @@ export const AuthProvider = ({ children }) => {
       const savedUser = storage.get('user');
 
       if (token && savedUser) {
+        // Show saved user immediately — don't wait for API
         try {
-          // Verify token is still valid
+          setUser(JSON.parse(savedUser));
+        } catch {
+          setUser(null);
+        }
+        setLoading(false);
+
+        // Verify token quietly in background
+        try {
           const res = await getMe();
           setUser(res.data);
+          storage.set('user', JSON.stringify(res.data));
         } catch {
           storage.remove('token');
           storage.remove('user');
@@ -36,8 +45,8 @@ export const AuthProvider = ({ children }) => {
       } else {
         storage.remove('token');
         storage.remove('user');
+        setLoading(false);
       }
-      setLoading(false);
     };
     initAuth();
   }, []);
